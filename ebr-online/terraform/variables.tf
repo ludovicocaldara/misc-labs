@@ -13,8 +13,8 @@ variable "subnet_cidr" {
 }
 
 variable "vm_shape" {
-  description = "OCI Compute VM shape. Flex is the new default and it's pretty nice :-). Beware of your quotas, credits and limits if you plan to change it."
-  default = "VM.Standard2.2"
+  description = "OCI Compute VM shape. Flex is the new default and it's pretty nice :-). Beware of your quotas, credits and limits if you plan to change it. Always Free: VM.Standard.A1.Flex"
+  default = "VM.Standard.A1.Flex"
 }
 
 variable "compute_name" {
@@ -27,3 +27,33 @@ variable "boot_volume_size_in_gbs" {
   default = 128
 }
 
+variable "ocpus" {
+  description = "The number of OCPUs to assign to the instance. Must be between 1 and 4."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.ocpus >= 1
+    error_message = "The value of ocpus must be greater than or equal to 1."
+  }
+
+  validation {
+    condition     = var.ocpus <= 2
+    error_message = "The value of ocpus must be less than or equal to 2 to remain in the always free."
+  }
+}
+
+variable "memory_in_gbs" {
+  description = "The amount of memory in GB to assign to the instance. Must be between 1 and 24."
+  default     = 2
+
+  validation {
+    condition     = var.memory_in_gbs >= 1
+    error_message = "The value of memory_in_gbs must be greater than or equal to 1."
+  }
+
+  validation {
+    condition     = var.memory_in_gbs <= 2
+    error_message = "The value of memory_in_gbs must be less than or equal to 2 to remain in the always free."
+  }
+}
