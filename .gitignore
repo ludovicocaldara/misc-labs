@@ -19,6 +19,15 @@ crash.log
 #
 *.tfvars
 
+# no SQLcl log
+history.log
+
+# no hr_main.log (created by the HR schema creation)
+*hr_main.log
+
+# no ADB wallets
+*wallet*.zip
+
 # Ignore override files as they are usually used to override resources locally and so
 # are not checked in
 override.tf
