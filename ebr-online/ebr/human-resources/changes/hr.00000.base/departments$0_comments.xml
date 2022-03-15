@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+	<changeSet id="b2a1ecc4b32378562154d98064d58007eeaac50c" author="(HR)-Generated" failOnError="false"    >
+		<n0:runOracleScript objectName="DEPARTMENTS$0_COMMENTS" objectType="COMMENT" ownerName="HR" sourceType="STRING"  >
+			<n0:source><![CDATA[
+   COMMENT ON COLUMN "DEPARTMENTS$0"."DEPARTMENT_ID" IS 'Primary key column of departments$0 table.';
+   COMMENT ON COLUMN "DEPARTMENTS$0"."DEPARTMENT_NAME" IS 'A not null column that shows name of a department. Administration, 
+Marketing, Purchasing, Human Resources, Shipping, IT, Executive, Public 
+Relations, Sales, Finance, and Accounting. ';
+   COMMENT ON COLUMN "DEPARTMENTS$0"."MANAGER_ID" IS 'Manager_id of a department. Foreign key to employee_id column of employees table. The manager_id column of the employee table references this column.';
+   COMMENT ON COLUMN "DEPARTMENTS$0"."LOCATION_ID" IS 'Location id where a department is located. Foreign key to location_id column of locations table.';
+   COMMENT ON TABLE "DEPARTMENTS$0"  IS 'Departments table that shows details of departments where employees 
+work. Contains 27 rows; references with locations, employees, and job_history tables.';]]></n0:source>
+		</n0:runOracleScript>
+	</changeSet>
+</databaseChangeLog>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+	<changeSet id="3737db74ab2391e5e6b6b44731f4dcdaef0f96c1" author="(HR)-Generated" failOnError="false"    >
+		<n0:createOracleTrigger objectName="UPDATE_JOB_HISTORY" objectType="TRIGGER" ownerName="HR"   >
+			<n0:source><![CDATA[
+  CREATE OR REPLACE EDITIONABLE TRIGGER "HR"."UPDATE_JOB_HISTORY" 
+  AFTER UPDATE OF job_id, department_id ON employees
+  FOR EACH ROW
+BEGIN
+  add_job_history(:old.employee_id, :old.hire_date, sysdate, 
+                  :old.job_id, :old.department_id);
+END;
+
+/
+ALTER TRIGGER "HR"."UPDATE_JOB_HISTORY" ENABLE]]></n0:source>
+		</n0:createOracleTrigger>
+	</changeSet>
+</databaseChangeLog>

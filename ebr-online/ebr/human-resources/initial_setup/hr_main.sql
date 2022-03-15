@@ -81,7 +81,31 @@ REM =======================================================
 REM cleanup section
 REM =======================================================
 
-DROP USER hr CASCADE;
+declare
+  e_user_exists exception;
+  pragma exception_init (e_user_exists, -1918);
+begin
+  begin
+    execute immediate 'drop user hr cascade';
+  exception
+    when e_user_exists then null;
+  end;
+end;
+/
+
+
+REM ======================================================
+REM procedure to cerate editions with AUTHID definer
+REM ======================================================
+create or replace procedure create_edition (edition_name varchar2)
+   AUTHID DEFINER
+as begin
+    execute immediate 'CREATE EDITION '||edition_name;
+    execute immediate 'GRANT USE ON EDITION '||edition_name||' TO PUBLIC';
+end;
+/
+
+
 
 REM =======================================================
 REM create user
@@ -99,7 +123,7 @@ ALTER USER hr TEMPORARY TABLESPACE &ttbs;
 
 GRANT CREATE SESSION, CREATE VIEW, ALTER SESSION, CREATE SEQUENCE TO hr;
 GRANT CREATE SYNONYM, CREATE DATABASE LINK, RESOURCE , UNLIMITED TABLESPACE TO hr;
-GRANT CREATE ANY EDITION TO hr;
+grant execute on create_edition to hr;
 ALTER USER hr ENABLE EDITIONS;
 
 

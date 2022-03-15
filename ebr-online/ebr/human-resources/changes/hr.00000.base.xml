@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+  <include file="hr.00000.base/employees_seq_sequence.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/locations_seq_sequence.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/departments_seq_sequence.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/departments$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jobs$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/countries$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/locations$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/employees$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/job_history$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/regions$0_table.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/countries$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/employees$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/locations$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/job_history$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jobs$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/regions$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/departments$0_comments.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/countries_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/employees_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/job_history_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/departments_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jobs_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/regions_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_details_view_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/locations_view.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jhist_job_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/dept_loc_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/dept_mgr_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_manager_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_job_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/countr_reg_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jhist_dept_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jhist_emp_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/loc_c_id_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_dept_fk_ref_constraint.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/add_job_history_procedure.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/secure_dml_procedure.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/loc_state_province_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jhist_job_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/loc_country_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_department_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jhist_employee_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_name_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_job_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/jhist_department_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_email_uk_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/emp_manager_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/dept_location_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/loc_city_ix_index.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/update_job_history_trigger.xml" relativeToChangelogFile="true" /> 
+  <include file="hr.00000.base/secure_employees_trigger.xml" relativeToChangelogFile="true" /> 
+</databaseChangeLog> 
