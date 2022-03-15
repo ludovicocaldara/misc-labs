@@ -224,9 +224,37 @@ SQL>
 
 ## Base Tables and Editioning Views
 The set of scripts that install the `HR` schema is different from the default one.
+The file `hr_main.sql` creates a procedure to let users create editions and use them.
+```
+REM ======================================================
+REM procedure to create editions as ADMIN (with AUTHID definer) and grant for self-grant
+REM ======================================================
+create or replace procedure create_edition (edition_name varchar2)
+   authid definer
+as
+  e_edition_exists exception;
+  e_grant_to_self exception;
+  pragma exception_init (e_edition_exists, -955);
+  pragma exception_init (e_grant_to_self, -1749);
+begin
+  begin
+    execute immediate 'CREATE EDITION '||edition_name;
+  exception
+    when e_edition_exists then null;
+  end;
+  begin
+    execute immediate 'GRANT USE ON EDITION '||edition_name||' TO '||USER;
+  exception
+    when e_grant_to_self then null;
+  end;
+end;
+/
+```
+In a normal situation, either a DBA or a single administrative user would take care of the editions, but in a development database with multiple schemas, developers may want to maintain the editions themselves. The `CREATE ANY EDITION` privilege is also handy, but not effective when the users that create them are recreated as part of integration tests: an edition is an object at database (PDB) level, but the grants work like for normal objects (grants are lost if the grantor is deleted).
+
 The file `hr_main.sql` gives extra grants to the `HR` user:
 ```
-GRANT CREATE ANY EDITION TO hr;
+grant execute on create_edition to hr;
 ALTER USER hr ENABLE EDITIONS;
 ```
 
@@ -487,7 +515,7 @@ Errors encountered:0
 
 
 ## Create a new edition to add the `dn` column to `departments` and `employees`
-As an example of schema change, let's start with a basic `add column`. We'll use the same modifications as the file [`hr_dn_c.sql`](https://github.com/oracle/db-sample-schemas/tree/main/human_resources) in the official `db-sample-schemas` repository.
+As an example of schema change, let's start with a basic `add column` with some dependents. We'll use the same modifications as the file [`hr_dn_c.sql`](https://github.com/oracle/db-sample-schemas/tree/main/human_resources) in the official `db-sample-schemas` repository.
 
 To achieve this goal with `EBR` and Liquibase, I have splitted the file in multiple SQL files:
 ```
@@ -505,21 +533,15 @@ hr.000011.trigger_update_job_history.sql
 ```
 
 The first two are the important ones for `EBR`.
-The first one creates the edition, but as the edition is a database-wide configuration, if there are other schemas using the same versions, we don't want to have any error `ORA-00955` because of any existing editions, so the code just skips that error:
+The first one creates the edition, but as the edition is a database-wide configuration, if there are other schemas using the same versions, we don't want to have any error `ORA-00955` because of any existing editions. On the other side, we want to make sure that if such version exists, we have the grant for it.
 ```
 -- hr.000001.edition_v1.sql
-declare
-  e_edition_exists exception;
-  pragma exception_init (e_edition_exists, -955);
 begin
-  begin
-    execute immediate 'CREATE EDITION v1';
-  exception
-    when e_edition_exists then null;
-  end;
+    admin.create_edition('V1');
 end;
 /
 ```
+Remember, for real-world scenarios, it would be best to have separate PDBs per deveoloper so that there are no conflicts in the management of editions.
 
 The second one is also important, as it sets the edition for the subsequent changesets:
 ```
@@ -527,7 +549,7 @@ The second one is also important, as it sets the edition for the subsequent chan
 ALTER SESSION SET EDITION=v1;
 ```
 
-This changeset must always be run in the changelog before other changelogs are executed (in case liquibase disconnects and reconnects again due to errors), so we will call it with the parameter `runAlways=true`:
+The first two changesets must always run in the changelog before other changelogs are executed (in case liquibase disconnects and reconnects again due to errors), so we will call it with the parameter `runAlways=true`:
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
@@ -537,7 +559,7 @@ This changeset must always be run in the changelog before other changelogs are e
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet author="lcaldara" id="hr.000001.edition_v1">
+    <changeSet author="lcaldara" id="hr.000001.edition_v1" runAlways="true">
       <sqlFile dbms="oracle" endDelimiter=";"
                path="hr.00001.edition_v1/hr.000001.edition_v1.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
@@ -552,4 +574,258 @@ This changeset must always be run in the changelog before other changelogs are e
 ```
 The other changesets have a different `splitStatements` parameter depending on their nature (SQL or PL/SQL).
 
-The next `lb update` statement will propagate also these changes... continue here
+Let's see a couple of flies as example.
+1. The column addition to one of the base tables:
+
+```
+-- "hr.000003.alter_departments_add_dn.sql"
+ALTER TABLE departments$0
+ ADD dn VARCHAR2(300);
+
+COMMENT ON COLUMN departments$0.dn IS
+'Distinguished name for each deparment.
+e.g: "ou=Purchasing, o=IMC, c=US"';
+```
+2. The creation of the new version of the editioning view `departments`, which now includes the `dn` column:
+```
+CREATE OR REPLACE EDITIONING VIEW departments AS
+    SELECT department_id, department_name, manager_id, location_id, dn FROM departments$0;
+```
+
+There are a few more changes that are not shown here.
+Now that the next changelog is ready, let's uncomment its line in `main.xml`:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+  <include file="./hr.00000.base.xml" relativeToChangelogFile="true"/>
+  <include file="./hr.00001.edition_v1.xml" relativeToChangelogFile="true"/>
+  <!-- PLACEHOLDER <include file="./hr.00002.edition_v2.xml" relativeToChangelogFile="true"/>  -->
+
+</databaseChangeLog>
+```
+
+A new `lb status` shows the new changesets that have not been applied yet:
+```
+SQL> lb status -changelog main.xml
+
+11 change sets have not been applied to HR@jdbc:oracle:thin:@(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-zurich-1.oraclecloud.com))(connect_data=(service_name=ht8k3jwmatw52we_demoadb_medium.adb.oraclecloud.com))(security=(ssl_server_cert_dn="CN=adb.eu-zurich-1.oraclecloud.com, OU=Oracle ADB ZURICH, O=Oracle Corporation, L=Redwood City, ST=California, C=US")))
+     hr.00001.edition_v1.xml::hr.000001.edition_v1::lcaldara
+     hr.00001.edition_v1.xml::hr.000002.alter_session::lcaldara
+     hr.00001.edition_v1.xml::hr.000003.alter_departments_add_dn::lcaldara
+     hr.00001.edition_v1.xml::hr.000004.view_departments::lcaldara
+     hr.00001.edition_v1.xml::hr.000005.alter_employees_add_dn::lcaldara
+     hr.00001.edition_v1.xml::hr.000006.view_employees::lcaldara
+     hr.00001.edition_v1.xml::hr.000007.update_dn::lcaldara
+     hr.00001.edition_v1.xml::hr.000008.procedure_secure_dml::lcaldara
+     hr.00001.edition_v1.xml::hr.000009.trigger_secure_employees::lcaldara
+     hr.00001.edition_v1.xml::hr.000010.procedure_add_job_history::lcaldara
+     hr.00001.edition_v1.xml::hr.000011.trigger_update_job_history::lcaldara
+     hr.00001.edition_v1.xml::hr.actualize_all::lcaldara
+```
+The next `lb update` statement will apply them:
+```
+SQL> lb update -changelog main.xml
+
+ScriptRunner Executing: begin
+    admin.create_edition('V1');
+end;
+/
+Liquibase Executed:begin
+    admin.create_edition('V1');
+end;
+/
+ScriptRunner Executing: ALTER SESSION SET EDITION=v1
+Liquibase Executed:ALTER SESSION SET EDITION=v1
+ScriptRunner Executing: ALTER TABLE departments$0
+ ADD dn VARCHAR2(300)
+Liquibase Executed:ALTER TABLE departments$0
+ ADD dn VARCHAR2(300)
+ScriptRunner Executing: COMMENT ON COLUMN departments$0.dn IS
+'Distinguished name for each deparment.
+e.g: "ou=Purchasing, o=IMC, c=US"'
+Liquibase Executed:COMMENT ON COLUMN departments$0.dn IS
+'Distinguished name for each deparment.
+e.g: "ou=Purchasing, o=IMC, c=US"'
+ScriptRunner Executing: CREATE OR REPLACE EDITIONING VIEW departments AS
+    SELECT department_id, department_name, manager_id, location_id, dn FROM departments$0
+Liquibase Executed:CREATE OR REPLACE EDITIONING VIEW departments AS
+    SELECT department_id, department_name, manager_id, location_id, dn FROM departments$0
+ScriptRunner Executing: ALTER TABLE employees$0
+ ADD dn VARCHAR2(300)
+Liquibase Executed:ALTER TABLE employees$0
+ ADD dn VARCHAR2(300)
+ScriptRunner Executing: COMMENT ON COLUMN employees$0.dn IS
+'Distinguished name of the employee.
+e.g. "cn=Lisa Ozer, ou=Sales, o=IMC, c=us"'
+Liquibase Executed:COMMENT ON COLUMN employees$0.dn IS
+'Distinguished name of the employee.
+e.g. "cn=Lisa Ozer, ou=Sales, o=IMC, c=us"'
+ScriptRunner Executing: CREATE OR REPLACE EDITIONING VIEW employees AS
+    SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id, dn FROM employees$0
+Liquibase Executed:CREATE OR REPLACE EDITIONING VIEW employees AS
+    SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id, dn FROM employees$0
+ScriptRunner Executing: UPDATE departments SET
+ dn='"ou=Administration, o=IMC, c=US"'
+ WHERE department_id=10
+Liquibase Executed:UPDATE departments SET
+ dn='"ou=Administration, o=IMC, c=US"'
+ WHERE department_id=10
+ScriptRunner Executing: UPDATE departments SET
+ dn='"ou=Mktg, o=IMC, c=US"'
+ WHERE department_id=20
+ [...]
+Liquibase Executed:UPDATE departments SET
+ dn='"ou=Payroll, ou=HR, ou=Europe, o=IMC, c=US"'
+ WHERE department_id=270
+ScriptRunner Executing: UPDATE employees SET
+ dn='"cn=Steven King, ou=Executive, o=IMC, c=us"'
+ WHERE employee_id=100
+Liquibase Executed:UPDATE employees SET
+ dn='"cn=Steven King, ou=Executive, o=IMC, c=us"'
+ WHERE employee_id=100
+ScriptRunner Executing: UPDATE employees SET
+ dn='"cn=Neena Kochhar, ou=Executive, o=IMC, c=us"'
+ WHERE employee_id=101
+ScriptRunner Executing: UPDATE employees SET
+ dn='"cn=David Austin, ou=IT, o=IMC, c=us"'
+ WHERE employee_id=105
+Liquibase Executed:UPDATE employees SET
+ dn='"cn=David Austin, ou=IT, o=IMC, c=us"'
+ WHERE employee_id=105
+ [...]
+Liquibase Executed:UPDATE employees SET
+ dn='"cn=William Gietz, ou=Accounting, o=IMC, c=us"'
+ WHERE employee_id=206
+ScriptRunner Executing: COMMIT
+Liquibase Executed:COMMIT
+ScriptRunner Executing: -- procedure and statement trigger to allow dmls during business hours:
+CREATE OR REPLACE PROCEDURE secure_dml
+IS
+BEGIN
+  IF TO_CHAR (SYSDATE, 'HH24:MI') NOT BETWEEN '08:00' AND '18:00'
+        OR TO_CHAR (SYSDATE, 'DY') IN ('SAT', 'SUN') THEN
+        RAISE_APPLICATION_ERROR (-20205,
+                'You may only make changes during normal office hours');
+  END IF;
+END secure_dml;
+/
+Liquibase Executed:-- procedure and statement trigger to allow dmls during business hours:
+CREATE OR REPLACE PROCEDURE secure_dml
+IS
+BEGIN
+  IF TO_CHAR (SYSDATE, 'HH24:MI') NOT BETWEEN '08:00' AND '18:00'
+        OR TO_CHAR (SYSDATE, 'DY') IN ('SAT', 'SUN') THEN
+        RAISE_APPLICATION_ERROR (-20205,
+                'You may only make changes during normal office hours');
+  END IF;
+END secure_dml;
+/
+ScriptRunner Executing: CREATE OR REPLACE TRIGGER secure_employees
+  BEFORE INSERT OR UPDATE OR DELETE ON employees
+BEGIN
+  secure_dml;
+END secure_employees;
+/
+Liquibase Executed:CREATE OR REPLACE TRIGGER secure_employees
+  BEFORE INSERT OR UPDATE OR DELETE ON employees
+BEGIN
+  secure_dml;
+END secure_employees;
+/
+ScriptRunner Executing: -- **************************************************************************
+-- procedure to add a row to the JOB_HISTORY table and row trigger
+-- to call the procedure when data is updated in the job_id or
+-- department_id columns in the EMPLOYEES table:
+
+CREATE OR REPLACE PROCEDURE add_job_history
+  (  p_emp_id          job_history.employee_id%type
+   , p_start_date      job_history.start_date%type
+   , p_end_date        job_history.end_date%type
+   , p_job_id          job_history.job_id%type
+   , p_department_id   job_history.department_id%type
+   )
+IS
+BEGIN
+  INSERT INTO job_history (employee_id, start_date, end_date,
+                           job_id, department_id)
+    VALUES(p_emp_id, p_start_date, p_end_date, p_job_id, p_department_id);
+END add_job_history;
+/
+Liquibase Executed:-- **************************************************************************
+-- procedure to add a row to the JOB_HISTORY table and row trigger
+-- to call the procedure when data is updated in the job_id or
+-- department_id columns in the EMPLOYEES table:
+
+CREATE OR REPLACE PROCEDURE add_job_history
+  (  p_emp_id          job_history.employee_id%type
+   , p_start_date      job_history.start_date%type
+   , p_end_date        job_history.end_date%type
+   , p_job_id          job_history.job_id%type
+   , p_department_id   job_history.department_id%type
+   )
+IS
+BEGIN
+  INSERT INTO job_history (employee_id, start_date, end_date,
+                           job_id, department_id)
+    VALUES(p_emp_id, p_start_date, p_end_date, p_job_id, p_department_id);
+END add_job_history;
+/
+ScriptRunner Executing: CREATE OR REPLACE TRIGGER update_job_history
+  AFTER UPDATE OF job_id, department_id ON employees
+  FOR EACH ROW
+BEGIN
+  add_job_history(:old.employee_id, :old.hire_date, sysdate,
+                  :old.job_id, :old.department_id);
+END;
+/
+Liquibase Executed:CREATE OR REPLACE TRIGGER update_job_history
+  AFTER UPDATE OF job_id, department_id ON employees
+  FOR EACH ROW
+BEGIN
+  add_job_history(:old.employee_id, :old.hire_date, sysdate,
+                  :old.job_id, :old.department_id);
+END;
+/
+Liquibase Executed:declare
+     type obj_t is record(
+         object_name user_objects.object_name%type,
+         namespace   user_objects.namespace%type);
+     type obj_tt is table of obj_t;
+
+     l_obj_list obj_tt;
+
+     l_obj_count binary_integer := 0;
+
+ begin
+     dbms_editions_utilities2.actualize_all;
+     loop
+         select object_name,namespace
+         bulk   collect
+         into   l_obj_list
+         from   user_objects
+         where  edition_name != sys_context('userenv', 'session_edition_name')
+         or     status = 'INVALID';
+
+         exit when l_obj_list.count = l_obj_count;
+
+         l_obj_count := l_obj_list.count;
+
+         for i in 1 .. l_obj_count
+         loop
+             dbms_utility.validate(user, l_obj_list(i).object_name, l_obj_list(i).namespace);
+         end loop;
+     end loop;
+ end;
+ /
+######## ERROR SUMMARY ##################
+Errors encountered:0
+
+######## END ERROR SUMMARY ##################
+```
+
+The very last step is not functional to tue application but still important. It actualize all the objects from the previous edition into the current one, plus it validates them (that will also force a recompile of eventual invalid objects).

@@ -95,16 +95,28 @@ end;
 
 
 REM ======================================================
-REM procedure to cerate editions with AUTHID definer
+REM procedure to create editions as ADMIN (with AUTHID definer) and grant for self-grant
 REM ======================================================
 create or replace procedure create_edition (edition_name varchar2)
-   AUTHID DEFINER
-as begin
+   authid definer
+as 
+  e_edition_exists exception;
+  e_grant_to_self exception;
+  pragma exception_init (e_edition_exists, -955);
+  pragma exception_init (e_grant_to_self, -1749);
+begin
+  begin
     execute immediate 'CREATE EDITION '||edition_name;
-    execute immediate 'GRANT USE ON EDITION '||edition_name||' TO PUBLIC';
+  exception
+    when e_edition_exists then null;
+  end;
+  begin
+    execute immediate 'GRANT USE ON EDITION '||edition_name||' TO '||USER;
+  exception
+    when e_grant_to_self then null;
+  end;
 end;
 /
-
 
 
 REM =======================================================

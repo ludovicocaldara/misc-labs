@@ -60,5 +60,10 @@
                path="hr.00001.edition_v1/hr.000011.trigger_update_job_history.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
+    <changeSet author="lcaldara" id="hr.actualize_all">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="common/actualize_all.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
 
 </databaseChangeLog>
