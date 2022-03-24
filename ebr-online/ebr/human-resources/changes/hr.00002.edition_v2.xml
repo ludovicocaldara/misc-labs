@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet author="lcaldara" id="hr.000001.edition_v2">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000001.edition_v2.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000002.alter_session" runAlways="true">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000002.alter_session.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000003.employee_add_columns">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000003.employee_add_columns.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000004.employee_forward_trigger">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000004.employee_forward_trigger.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000005.employee_enable_forward_trigger">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000005.employee_enable_forward_trigger.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000006.employee_wait_on_pending_dml">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000006.employee_wait_on_pending_dml.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000007.employee_transform_rows">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000007.employee_transform_rows.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000008.employee_reverse_trigger">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000008.employee_reverse_trigger.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000009.employee_enable_reverse_trigger">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000009.employee_enable_reverse_trigger.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000010.view_employees">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00002.edition_v2/hr.000010.view_employees.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.actualize_all">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="common/actualize_all.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+</databaseChangeLog>

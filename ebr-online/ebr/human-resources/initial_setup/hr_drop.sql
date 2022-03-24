@@ -76,5 +76,3 @@ DROP VIEW job_history ;
 DROP VIEW employees   ;
 DROP VIEW countries   ;  
 
-COMMIT;
-
