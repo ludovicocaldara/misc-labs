@@ -95,7 +95,7 @@ end;
 
 
 REM ======================================================
-REM procedure to create editions as ADMIN (with AUTHID definer) and grant for self-grant
+REM procedure to create editions as ADMIN (with AUTHID definer) and grant to invoker
 REM ======================================================
 create or replace procedure create_edition (edition_name varchar2)
    authid definer
@@ -118,6 +118,47 @@ begin
 end;
 /
 
+REM ======================================================
+REM procedure to drop editions as ADMIN (with AUTHID definer)
+REM ======================================================
+create or replace procedure drop_edition (edition_name varchar2)
+   authid definer
+as
+  e_inexistent_edition exception;
+  e_grant_to_self exception;
+  e_not_granted exception;
+  pragma exception_init (e_inexistent_edition, -38801);
+  pragma exception_init (e_grant_to_self, -1749);
+  pragma exception_init (e_not_granted, -1927);
+begin
+
+  begin
+    execute immediate 'REVOKE USE ON EDITION '||edition_name||' FROM '||USER;
+  exception
+    when e_grant_to_self then null;
+	when e_not_granted then null;
+  end;
+  begin
+    execute immediate 'DROP EDITION '||edition_name||' CASCADE';
+  exception
+     when e_inexistent_edition then null;
+  end;
+  dbms_editions_utilities.clean_unusable_editions;
+end;
+/
+
+REM ======================================================
+REM procedure to set the default edition as ADMIN (with AUTHID definer)
+REM ======================================================
+create or replace procedure default_edition (edition_name varchar2)
+   authid definer
+as
+begin
+  execute immediate 'alter database default edition ='||edition_name;
+end;
+/
+
+
 
 REM =======================================================
 REM create user
@@ -135,8 +176,20 @@ ALTER USER hr TEMPORARY TABLESPACE &ttbs;
 
 GRANT CREATE SESSION, CREATE VIEW, ALTER SESSION, CREATE SEQUENCE TO hr;
 GRANT CREATE SYNONYM, CREATE DATABASE LINK, RESOURCE , UNLIMITED TABLESPACE TO hr;
-grant execute on create_edition to hr;
+
+-- for using the editions
 ALTER USER hr ENABLE EDITIONS;
+grant select on dba_editions to hr;
+
+
+-- for using DBMS_REDEFINITION
+GRANT CREATE MATERIALIZED VIEW TO HR;
+GRANT EXECUTE ON DBMS_REDEFINITION TO HR;
+
+-- grant to the helper procedures
+grant execute on create_edition to hr;
+grant execute on drop_edition to hr;
+grant execute on default_edition to hr;
 
 
 REM =======================================================

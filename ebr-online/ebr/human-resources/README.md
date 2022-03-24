@@ -222,12 +222,17 @@ PL/SQL procedure successfully completed.
 SQL>
 ```
 
-## Base Tables and Editioning Views
-The set of scripts that install the `HR` schema is different from the default one.
-The file `hr_main.sql` creates a procedure to let users create editions and use them.
+## Some helper procedures to deal with editions
+In a production environment, the management of editions is usually a DBA task.
+
+Some operations like `CREATE EDITION`, `DROP EDITION`, `ALTER DATABASE DEFAULT EDITION`, etc., require elevated privileges that should not be granted to normal users.
+For CI/CD testing, and therefore for production environments that rolled out with CI/CD pipelines, these procedures using `AUTHID DEFINER` will facilitate the integration without executing anything as DBA.
+Keep in mind, editions are shared among all schemas in the database, therefore all the schemas must belong to the same application and follow the same edition scheme. Different applications should be separated in different databases (or PDBs).
+
+The file `hr_main.sql` creates these procedure to let users manage and use editions themselves.
 ```
 REM ======================================================
-REM procedure to create editions as ADMIN (with AUTHID definer) and grant for self-grant
+REM procedure to create editions as ADMIN (with AUTHID definer) and grant to invoker
 REM ======================================================
 create or replace procedure create_edition (edition_name varchar2)
    authid definer
@@ -249,15 +254,64 @@ begin
   end;
 end;
 /
-```
-In a normal situation, either a DBA or a single administrative user would take care of the editions, but in a development database with multiple schemas, developers may want to maintain the editions themselves. The `CREATE ANY EDITION` privilege is also handy, but not effective when the users that create them are recreated as part of integration tests: an edition is an object at database (PDB) level, but the grants work like for normal objects (grants are lost if the grantor is deleted).
 
-The file `hr_main.sql` gives extra grants to the `HR` user:
+REM ======================================================
+REM procedure to drop editions as ADMIN (with AUTHID definer)
+REM ======================================================
+create or replace procedure drop_edition (edition_name varchar2)
+   authid definer
+as
+  e_inexistent_edition exception;
+  e_grant_to_self exception;
+  e_not_granted exception;
+  pragma exception_init (e_inexistent_edition, -38801);
+  pragma exception_init (e_grant_to_self, -1749);
+  pragma exception_init (e_not_granted, -1927);
+begin
+  begin
+    execute immediate 'REVOKE USE ON EDITION '||edition_name||' FROM '||USER;
+  exception
+    when e_grant_to_self then null;
+    when e_not_granted then null;
+  end;
+  begin
+    execute immediate 'DROP EDITION '||edition_name||' CASCADE';
+  exception
+     when e_inexistent_edition then null;
+  end;
+  dbms_editions_utilities.clean_unusable_editions;
+end;
+/
+
+REM ======================================================
+REM procedure to set the default edition as ADMIN (with AUTHID definer)
+REM ======================================================
+create or replace procedure default_edition (edition_name varchar2)
+   authid definer
+as
+  e_inexistent_edition exception;
+  pragma exception_init (e_inexistent_edition, -38801);
+begin
+  begin
+    execute immediate 'alter database default edition ='||edition_name;
+  exception
+    when e_inexistent_edition then null;
+  end;
+end;
+/
+```
+In a normal situation, either a DBA or a single administrative user would take care of the editions, but in a development database, developers may want to maintain the editions themselves. The `CREATE ANY EDITION` privilege is also handy, but not effective when the users that create them are recreated as part of integration tests: an edition is an object at database (PDB) level, but the grants work like for normal objects (grants are lost if the grantor is deleted).
+
+The file `hr_main.sql` gives the extra grants to the `HR` user:
 ```
 grant execute on create_edition to hr;
+grant execute on drop_edition to hr;
+grant execute on default_edition to hr;
 ALTER USER hr ENABLE EDITIONS;
 ```
 
+## Base Tables and Editioning Views
+The set of scripts that install the `HR` schema is different from the default one.
 Also give a look at the file `hr_cre.sql`. Each table has a different name compared to the original `HR` schema (a suffix `$0` in this example):
 ```
 CREATE TABLE regions$0
@@ -337,7 +391,7 @@ Export Synonyms         false
 [Method writeChangeLogs]:                   6928 ms
 ```
 
-The base changelog is only useful if you plan to recreate the schema from scratch by using `Liquibase` instead of the base scripts.
+This initial changelog is useful if you plan to recreate the schema from scratch by using `Liquibase` instead of the base scripts.
 Notice that the `HR` schema creation is not included in the changelog.
 
 The Liquibase changelog is created as a set of xml files:
@@ -417,13 +471,11 @@ The `controller.xml` is the changelog file that contains the changesets. You can
 </databaseChangeLog>
 ```
 
-In real life, development should happen either on an anonymized copy of the production, or on the same data structures but with a development data set. There are ways to achieve this result that we will not discuss here.
-
 ## Create your own directory structure
-For this and subsequent changelogs, you might want to use a neater directory organization, for example:
+For the base and subsequent changelogs, you might want to use a neater directory organization, for example:
 ```
 main.xml
-  -> sub_changelog_1.xml
+sub_changelog_1.xml
     -> sub_changelog_1/changesets*
   -> sub_changelog_2.xml
     -> sub_changelog_2/changesets*
@@ -454,7 +506,7 @@ so that the `<include>` in the new file look like (notice the new path):
 </databaseChangeLog>
 ```
 
-The file `main.xml` will be something like:
+The file `main.xml` includes all the changelogs, so in a single update, ALL the modifications from the initial version to the last changelog will be checked and eventually applied.
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
@@ -470,9 +522,9 @@ The file `main.xml` will be something like:
 </databaseChangeLog>
 ```
 
-Note that there are already two placeholders for the next schema/code releases.
+In the example, there are already two placeholders for the next schema/code releases.
 
-At this point, the command `lb genschema` has generated the initial changelog, but the current schema is not synchronized with Liquibase yet.
+At this point we can run `lb update` to synchronize the definition with the `Liquibase` metadata (optional):
 ```
 SQL> cd ..
 SQL> lb status -changelog main.xml
@@ -484,9 +536,6 @@ SQL> lb status -changelog main.xml
      hr.00000.base/departments$0_table.xml::8fccd55150e9ae05304edde806cb429fdc3b875f::(HR)-Generated
 [...]
 
-```
-We can synch it with an `lb update`.
-```
 SQL> lb update -changelog main.xml
 
 ScriptRunner Executing: hr.00000.base/employees_seq_sequence.xml::42e3db1348e500dade36829bab3b7f5343ad6f09::(HR)-Generated
@@ -514,42 +563,42 @@ Errors encountered:0
 ```
 
 
-## Create a new edition to add the `dn` column to `departments` and `employees`
-As an example of schema change, let's start with a basic `add column` with some dependents. We'll use the same modifications as the file [`hr_dn_c.sql`](https://github.com/oracle/db-sample-schemas/tree/main/human_resources) in the official `db-sample-schemas` repository.
+## Prepare the scripts to create a new edition and split `employees.phone_number` to `country_code` and `phone#`
+As an example of schema change, let's split a column to two columns.
 
-To achieve this goal with `EBR` and Liquibase, I have splitted the file in multiple SQL files:
+To achieve this goal, there are a few steps to do. To let `Liquibase` retry them (idempotency), we need separated files:
 ```
-hr.000001.edition_v1.sql
+hr.000001.edition_v2.sql
 hr.000002.alter_session.sql
-hr.000003.alter_departments_add_dn.sql
-hr.000004.view_departments.sql
-hr.000005.alter_employees_add_dn.sql
-hr.000006.view_employees.sql
-hr.000007.update_dn.sql
-hr.000008.procedure_secure_dml.sql
-hr.000009.trigger_secure_employees.sql
-hr.000010.procedure_add_job_history.sql
-hr.000011.trigger_update_job_history.sql
+hr.000003.employee_add_columns.sql
+hr.000004.employee_forward_trigger.sql
+hr.000005.employee_enable_forward_trigger.sql
+hr.000006.employee_wait_on_pending_dml.sql
+hr.000007.employee_transform_rows.sql
+hr.000008.employee_reverse_trigger.sql
+hr.000009.employee_enable_reverse_trigger.sql
+hr.000010.view_employees.sql
 ```
+### 1. Create the new edition
 
-The first two are the important ones for `EBR`.
-The first one creates the edition, but as the edition is a database-wide configuration, if there are other schemas using the same versions, we don't want to have any error `ORA-00955` because of any existing editions. On the other side, we want to make sure that if such version exists, we have the grant for it.
+For this, we will use the helper function created earlier:
 ```
--- hr.000001.edition_v1.sql
 begin
-    admin.create_edition('V1');
+    admin.create_edition('V2');
 end;
 /
 ```
+This runs the `CREATE EDITION V2` and `GRANT USE ON EDITION V2 to HR`.
+
 Remember, for real-world scenarios, it would be best to have separate PDBs per deveoloper so that there are no conflicts in the management of editions.
 
+### 2. Use the new edition
 The second one is also important, as it sets the edition for the subsequent changesets:
 ```
--- hr.000002.alter_session.sql
-ALTER SESSION SET EDITION=v1;
+ALTER SESSION SET EDITION=V2;
 ```
 
-The first two changesets must always run in the changelog before other changelogs are executed (in case liquibase disconnects and reconnects again due to errors), so we will call it with the parameter `runAlways=true`:
+The second changesets must always run in the changelog to ensure that the correct edition is set (in case after an error liquibase disconnects and reconnects again to the previous edition), so we will call it with the parameter `runAlways=true`:
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
@@ -558,12 +607,7 @@ The first two changesets must always run in the changelog before other changelog
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-
-    <changeSet author="lcaldara" id="hr.000001.edition_v1" runAlways="true">
-      <sqlFile dbms="oracle" endDelimiter=";"
-               path="hr.00001.edition_v1/hr.000001.edition_v1.sql"
-               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
-    </changeSet>
+    [...]
     <changeSet author="lcaldara" id="hr.000002.alter_session" runAlways="true">
       <sqlFile dbms="oracle" endDelimiter=";"
                path="hr.00001.edition_v1/hr.000002.alter_session.sql"
@@ -574,223 +618,207 @@ The first two changesets must always run in the changelog before other changelog
 ```
 The other changesets have a different `splitStatements` parameter depending on their nature (SQL or PL/SQL).
 
-Let's see a couple of flies as example.
-1. The column addition to one of the base tables:
+### 3. Add the new columns
+This operation is online for subsequent DMLs but must wait on the existing ones. We specify a DDL timeout:
+```
+alter session set DDL_LOCK_TIMEOUT=30;
 
-```
--- "hr.000003.alter_departments_add_dn.sql"
-ALTER TABLE departments$0
- ADD dn VARCHAR2(300);
-
-COMMENT ON COLUMN departments$0.dn IS
-'Distinguished name for each deparment.
-e.g: "ou=Purchasing, o=IMC, c=US"';
-```
-2. The creation of the new version of the editioning view `departments`, which now includes the `dn` column:
-```
-CREATE OR REPLACE EDITIONING VIEW departments AS
-    SELECT department_id, department_name, manager_id, location_id, dn FROM departments$0;
+alter table employees$0 add (
+    country_code varchar2(3),
+    phone# varchar2(20)
+);
 ```
 
-There are a few more changes that are not shown here.
-Now that the next changelog is ready, let's uncomment its line in `main.xml`:
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+### 4. Create the forward cross-edition trigger
+Two triggers make sure that changes done in the old and new editions populate the columns correctly.
 
-  <include file="./hr.00000.base.xml" relativeToChangelogFile="true"/>
-  <include file="./hr.00001.edition_v1.xml" relativeToChangelogFile="true"/>
-  <!-- PLACEHOLDER <include file="./hr.00002.edition_v2.xml" relativeToChangelogFile="true"/>  -->
+The `forward crossedition` trigger propagates the changes from the old edition to the new columns.
+There will be a reverse one that will do the same for DMLs on the new edition.
 
-</databaseChangeLog>
+```
+create or replace trigger employees_fwdxedition_trg
+  before insert or update of phone_number on employees$0
+  for each row
+  forward crossedition
+  disable
+declare
+    first_dot  number;
+    second_dot number;
+begin
+    if :new.phone_number like '011.%'
+   then
+        first_dot
+           := instr( :new.phone_number, '.' );
+        second_dot
+           := instr( :new.phone_number, '.', 1, 2 );
+        :new.country_code
+           := '+'||
+              substr( :new.phone_number,
+                        first_dot+1,
+                      second_dot-first_dot-1 );
+        :new.phone#
+           := substr( :new.phone_number,
+                        second_dot+1 );
+    else
+        :new.country_code := '+1';
+        :new.phone# := :new.phone_number;
+    end if;
+end;
+/
+alter trigger employees_fwdxedition_trg enable;
 ```
 
-A new `lb status` shows the new changesets that have not been applied yet:
+### 5. Populate the new columns
+Before populating the new columns, we wait for the current DMLs to finish:
 ```
-SQL> lb status -changelog main.xml
+DECLARE
+  scn number := null;
+  -- A null or negative value for Timeout will cause a very long wait.
+  timeout constant integer := null;
 
-11 change sets have not been applied to HR@jdbc:oracle:thin:@(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-zurich-1.oraclecloud.com))(connect_data=(service_name=ht8k3jwmatw52we_demoadb_medium.adb.oraclecloud.com))(security=(ssl_server_cert_dn="CN=adb.eu-zurich-1.oraclecloud.com, OU=Oracle ADB ZURICH, O=Oracle Corporation, L=Redwood City, ST=California, C=US")))
-     hr.00001.edition_v1.xml::hr.000001.edition_v1::lcaldara
-     hr.00001.edition_v1.xml::hr.000002.alter_session::lcaldara
-     hr.00001.edition_v1.xml::hr.000003.alter_departments_add_dn::lcaldara
-     hr.00001.edition_v1.xml::hr.000004.view_departments::lcaldara
-     hr.00001.edition_v1.xml::hr.000005.alter_employees_add_dn::lcaldara
-     hr.00001.edition_v1.xml::hr.000006.view_employees::lcaldara
-     hr.00001.edition_v1.xml::hr.000007.update_dn::lcaldara
-     hr.00001.edition_v1.xml::hr.000008.procedure_secure_dml::lcaldara
-     hr.00001.edition_v1.xml::hr.000009.trigger_secure_employees::lcaldara
-     hr.00001.edition_v1.xml::hr.000010.procedure_add_job_history::lcaldara
-     hr.00001.edition_v1.xml::hr.000011.trigger_update_job_history::lcaldara
-     hr.00001.edition_v1.xml::hr.actualize_all::lcaldara
+BEGIN
+  if not sys.dbms_utility.wait_on_pending_dml(
+    tables => 'EMPLOYEES$0',
+    timeout => timeout,
+    scn => scn)
+  then
+    raise_application_error(-20000,
+      'wait_on_pending_dml() timed out. '||
+      'CET was enabled before SCN: '||SCN
+    );
+  end if;
+end;
+/
 ```
-The next `lb update` statement will apply them:
+
+The population happens by applying the trigger on the rows of the table, using a special `dbms_sql.parse` call:
 ```
-SQL> lb update -changelog main.xml
+declare
+  cur integer := sys.dbms_sql.open_cursor(security_level => 2);
+  no_of_updated_rows integer not null := -1;
+begin
+  sys.dbms_sql.parse(
+    c => cur,
+    language_flag => sys.dbms_sql.native,
+    statement => 'update employees$0 set phone_number = phone_number',
+    apply_crossedition_trigger => 'employees_fwdxedition_trg',
+    fire_apply_trigger => true
+  );
+  no_of_updated_rows := sys.dbms_sql.execute(cur);
+  sys.dbms_sql.close_cursor(cur);
+end;
+/
+```
+
+### 6. Create the reverse trigger
+Before using the new edition, we create the reverse trigger so that new DMLs on the new columns will update the old column for the applications still running in the old edition:
+
+```
+create or replace trigger employees_revxedition_trg
+  before insert or update of country_code,phone# on employees$0
+  for each row
+  reverse crossedition
+  disable
+declare
+    first_dot  number;
+    second_dot number;
+begin
+        if :new.country_code = '+1'
+        then
+           :new.phone_number :=
+              :new.phone#;
+        else
+           :new.phone_number :=
+              '011.' ||
+              substr( :new.country_code, 2 ) ||
+              '.' || :new.phone#;
+        end if;
+end;
+/
+
+alter trigger employees_revxedition_trg enable;
+```
+
+### 7. Create the new version of the editioning view
+The editioning view is "the surrogate" of the base table. In the new edition, we want to have `country_code` and `phone#` columns, and we omit `phone_number`. Note that we can also choose the order of the column in the definition.
+```
+CREATE OR REPLACE EDITIONING VIEW employees AS
+    SELECT employee_id, first_name, last_name, email, country_code, phone#, hire_date, job_id, salary, commission_pct, manager_id, department_id FROM employees$0;
+```
+
+### 8. Actualize the objects
+Now that the modifications to the existing objects have been made, we can "transfer" all the inherited objects from the previous version to the new one, and at the same time validate/recompile them (nobody is using them yet).
+```
+declare
+     type obj_t is record(
+         object_name user_objects.object_name%type,
+         namespace   user_objects.namespace%type);
+     type obj_tt is table of obj_t;
+
+     l_obj_list obj_tt;
+
+     l_obj_count binary_integer := 0;
+
+ begin
+     dbms_editions_utilities2.actualize_all;
+     loop
+         select object_name,namespace
+         bulk   collect
+         into   l_obj_list
+         from   user_objects
+         where  edition_name != sys_context('userenv', 'session_edition_name')
+         or     status = 'INVALID';
+
+         exit when l_obj_list.count = l_obj_count;
+
+         l_obj_count := l_obj_list.count;
+
+         for i in 1 .. l_obj_count
+         loop
+             dbms_utility.validate(user, l_obj_list(i).object_name, l_obj_list(i).namespace);
+         end loop;
+     end loop;
+ end;
+ /
+```
+
+## Run `lb update` for the new changelog
+Be sure to cd to the right directory:
+```
+SQL> exit
+$ cd ../changes
+$ rlwrap sql /nolog
+
+SQLcl: Release 21.4 Production on Thu Mar 17 18:54:13 2022
+
+Copyright (c) 1982, 2022, Oracle.  All rights reserved.
+
+SQL> set cloudconfig ../../adb_wallet.zip
+SQL> connect hr/Welcome#Welcome#123@demoadb_medium
+Connected.
+SQL> lb update -changelog hr.00002.edition_v2.xml
 
 ScriptRunner Executing: begin
-    admin.create_edition('V1');
+    admin.create_edition('V2');
 end;
 /
 Liquibase Executed:begin
-    admin.create_edition('V1');
+    admin.create_edition('V2');
 end;
 /
-ScriptRunner Executing: ALTER SESSION SET EDITION=v1
-Liquibase Executed:ALTER SESSION SET EDITION=v1
-ScriptRunner Executing: ALTER TABLE departments$0
- ADD dn VARCHAR2(300)
-Liquibase Executed:ALTER TABLE departments$0
- ADD dn VARCHAR2(300)
-ScriptRunner Executing: COMMENT ON COLUMN departments$0.dn IS
-'Distinguished name for each deparment.
-e.g: "ou=Purchasing, o=IMC, c=US"'
-Liquibase Executed:COMMENT ON COLUMN departments$0.dn IS
-'Distinguished name for each deparment.
-e.g: "ou=Purchasing, o=IMC, c=US"'
-ScriptRunner Executing: CREATE OR REPLACE EDITIONING VIEW departments AS
-    SELECT department_id, department_name, manager_id, location_id, dn FROM departments$0
-Liquibase Executed:CREATE OR REPLACE EDITIONING VIEW departments AS
-    SELECT department_id, department_name, manager_id, location_id, dn FROM departments$0
-ScriptRunner Executing: ALTER TABLE employees$0
- ADD dn VARCHAR2(300)
-Liquibase Executed:ALTER TABLE employees$0
- ADD dn VARCHAR2(300)
-ScriptRunner Executing: COMMENT ON COLUMN employees$0.dn IS
-'Distinguished name of the employee.
-e.g. "cn=Lisa Ozer, ou=Sales, o=IMC, c=us"'
-Liquibase Executed:COMMENT ON COLUMN employees$0.dn IS
-'Distinguished name of the employee.
-e.g. "cn=Lisa Ozer, ou=Sales, o=IMC, c=us"'
-ScriptRunner Executing: CREATE OR REPLACE EDITIONING VIEW employees AS
-    SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id, dn FROM employees$0
-Liquibase Executed:CREATE OR REPLACE EDITIONING VIEW employees AS
-    SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id, dn FROM employees$0
-ScriptRunner Executing: UPDATE departments SET
- dn='"ou=Administration, o=IMC, c=US"'
- WHERE department_id=10
-Liquibase Executed:UPDATE departments SET
- dn='"ou=Administration, o=IMC, c=US"'
- WHERE department_id=10
-ScriptRunner Executing: UPDATE departments SET
- dn='"ou=Mktg, o=IMC, c=US"'
- WHERE department_id=20
- [...]
-Liquibase Executed:UPDATE departments SET
- dn='"ou=Payroll, ou=HR, ou=Europe, o=IMC, c=US"'
- WHERE department_id=270
-ScriptRunner Executing: UPDATE employees SET
- dn='"cn=Steven King, ou=Executive, o=IMC, c=us"'
- WHERE employee_id=100
-Liquibase Executed:UPDATE employees SET
- dn='"cn=Steven King, ou=Executive, o=IMC, c=us"'
- WHERE employee_id=100
-ScriptRunner Executing: UPDATE employees SET
- dn='"cn=Neena Kochhar, ou=Executive, o=IMC, c=us"'
- WHERE employee_id=101
-ScriptRunner Executing: UPDATE employees SET
- dn='"cn=David Austin, ou=IT, o=IMC, c=us"'
- WHERE employee_id=105
-Liquibase Executed:UPDATE employees SET
- dn='"cn=David Austin, ou=IT, o=IMC, c=us"'
- WHERE employee_id=105
- [...]
-Liquibase Executed:UPDATE employees SET
- dn='"cn=William Gietz, ou=Accounting, o=IMC, c=us"'
- WHERE employee_id=206
-ScriptRunner Executing: COMMIT
-Liquibase Executed:COMMIT
-ScriptRunner Executing: -- procedure and statement trigger to allow dmls during business hours:
-CREATE OR REPLACE PROCEDURE secure_dml
-IS
-BEGIN
-  IF TO_CHAR (SYSDATE, 'HH24:MI') NOT BETWEEN '08:00' AND '18:00'
-        OR TO_CHAR (SYSDATE, 'DY') IN ('SAT', 'SUN') THEN
-        RAISE_APPLICATION_ERROR (-20205,
-                'You may only make changes during normal office hours');
-  END IF;
-END secure_dml;
-/
-Liquibase Executed:-- procedure and statement trigger to allow dmls during business hours:
-CREATE OR REPLACE PROCEDURE secure_dml
-IS
-BEGIN
-  IF TO_CHAR (SYSDATE, 'HH24:MI') NOT BETWEEN '08:00' AND '18:00'
-        OR TO_CHAR (SYSDATE, 'DY') IN ('SAT', 'SUN') THEN
-        RAISE_APPLICATION_ERROR (-20205,
-                'You may only make changes during normal office hours');
-  END IF;
-END secure_dml;
-/
-ScriptRunner Executing: CREATE OR REPLACE TRIGGER secure_employees
-  BEFORE INSERT OR UPDATE OR DELETE ON employees
-BEGIN
-  secure_dml;
-END secure_employees;
-/
-Liquibase Executed:CREATE OR REPLACE TRIGGER secure_employees
-  BEFORE INSERT OR UPDATE OR DELETE ON employees
-BEGIN
-  secure_dml;
-END secure_employees;
-/
-ScriptRunner Executing: -- **************************************************************************
--- procedure to add a row to the JOB_HISTORY table and row trigger
--- to call the procedure when data is updated in the job_id or
--- department_id columns in the EMPLOYEES table:
-
-CREATE OR REPLACE PROCEDURE add_job_history
-  (  p_emp_id          job_history.employee_id%type
-   , p_start_date      job_history.start_date%type
-   , p_end_date        job_history.end_date%type
-   , p_job_id          job_history.job_id%type
-   , p_department_id   job_history.department_id%type
-   )
-IS
-BEGIN
-  INSERT INTO job_history (employee_id, start_date, end_date,
-                           job_id, department_id)
-    VALUES(p_emp_id, p_start_date, p_end_date, p_job_id, p_department_id);
-END add_job_history;
-/
-Liquibase Executed:-- **************************************************************************
--- procedure to add a row to the JOB_HISTORY table and row trigger
--- to call the procedure when data is updated in the job_id or
--- department_id columns in the EMPLOYEES table:
-
-CREATE OR REPLACE PROCEDURE add_job_history
-  (  p_emp_id          job_history.employee_id%type
-   , p_start_date      job_history.start_date%type
-   , p_end_date        job_history.end_date%type
-   , p_job_id          job_history.job_id%type
-   , p_department_id   job_history.department_id%type
-   )
-IS
-BEGIN
-  INSERT INTO job_history (employee_id, start_date, end_date,
-                           job_id, department_id)
-    VALUES(p_emp_id, p_start_date, p_end_date, p_job_id, p_department_id);
-END add_job_history;
-/
-ScriptRunner Executing: CREATE OR REPLACE TRIGGER update_job_history
-  AFTER UPDATE OF job_id, department_id ON employees
-  FOR EACH ROW
-BEGIN
-  add_job_history(:old.employee_id, :old.hire_date, sysdate,
-                  :old.job_id, :old.department_id);
-END;
-/
-Liquibase Executed:CREATE OR REPLACE TRIGGER update_job_history
-  AFTER UPDATE OF job_id, department_id ON employees
-  FOR EACH ROW
-BEGIN
-  add_job_history(:old.employee_id, :old.hire_date, sysdate,
-                  :old.job_id, :old.department_id);
-END;
-/
+ScriptRunner Executing: ALTER SESSION SET EDITION=V2
+Liquibase Executed:ALTER SESSION SET EDITION=V2
+ScriptRunner Executing: alter session set DDL_LOCK_TIMEOUT=30
+Liquibase Executed:alter session set DDL_LOCK_TIMEOUT=30
+ScriptRunner Executing: alter table employees$0 add (
+    country_code varchar2(3),
+    phone# varchar2(20)
+)
+Liquibase Executed:alter table employees$0 add (
+    country_code varchar2(3),
+    phone# varchar2(20)
+)
+[...]
 Liquibase Executed:declare
      type obj_t is record(
          object_name user_objects.object_name%type,
@@ -828,4 +856,358 @@ Errors encountered:0
 ######## END ERROR SUMMARY ##################
 ```
 
-The very last step is not functional to tue application but still important. It actualize all the objects from the previous edition into the current one, plus it validates them (that will also force a recompile of eventual invalid objects).
+## Enjoy the two editions
+At this point we have one edition using the old column:
+```
+SQL> alter session set edition=v0;
+
+Session altered.
+
+SQL> select * from employees where rownum<5;
+
+   EMPLOYEE_ID    FIRST_NAME    LAST_NAME       EMAIL          PHONE_NUMBER    HIRE_DATE    JOB_ID    SALARY    COMMISSION_PCT    MANAGER_ID    DEPARTMENT_ID
+______________ _____________ ____________ ___________ _____________________ ____________ _________ _________ _________________ _____________ ________________
+           151 David         Bernstein    DBERNSTE    011.44.1344.345268    24-MAR-05    SA_REP         9500              0.25           145               80
+           156 Janette       King         JKING       011.44.1345.429268    30-JAN-04    SA_REP        10000              0.35           146               80
+           161 Sarath        Sewall       SSEWALL     011.44.1345.529268    03-NOV-06    SA_REP         7000              0.25           146               80
+           166 Sundar        Ande         SANDE       011.44.1346.629268    24-MAR-08    SA_REP         6400               0.1           147               80
+```
+and the new one with the other two columns:
+```
+SQL> alter session set edition=v2;
+
+Session altered.
+
+SQL> select * from employees where rownum<5;
+
+   EMPLOYEE_ID    FIRST_NAME    LAST_NAME       EMAIL    COUNTRY_CODE         PHONE#    HIRE_DATE    JOB_ID    SALARY    COMMISSION_PCT    MANAGER_ID    DEPARTMENT_ID
+______________ _____________ ____________ ___________ _______________ ______________ ____________ _________ _________ _________________ _____________ ________________
+           151 David         Bernstein    DBERNSTE    +44             1344.345268    24-MAR-05    SA_REP         9500              0.25           145               80
+           156 Janette       King         JKING       +44             1345.429268    30-JAN-04    SA_REP        10000              0.35           146               80
+           161 Sarath        Sewall       SSEWALL     +44             1345.529268    03-NOV-06    SA_REP         7000              0.25           146               80
+           166 Sundar        Ande         SANDE       +44             1346.629268    24-MAR-08    SA_REP         6400               0.1           147               80
+```
+
+The base table itself contains all of them, but should not be used directly.
+```
+SQL> select * from employees$0 where rownum<5;
+
+   EMPLOYEE_ID    FIRST_NAME    LAST_NAME       EMAIL          PHONE_NUMBER    HIRE_DATE    JOB_ID    SALARY    COMMISSION_PCT    MANAGER_ID    DEPARTMENT_ID    COUNTRY_CODE         PHONE#
+______________ _____________ ____________ ___________ _____________________ ____________ _________ _________ _________________ _____________ ________________ _______________ ______________
+           151 David         Bernstein    DBERNSTE    011.44.1344.345268    24-MAR-05    SA_REP         9500              0.25           145               80 +44             1344.345268
+           156 Janette       King         JKING       011.44.1345.429268    30-JAN-04    SA_REP        10000              0.35           146               80 +44             1345.429268
+           161 Sarath        Sewall       SSEWALL     011.44.1345.529268    03-NOV-06    SA_REP         7000              0.25           146               80 +44             1345.529268
+           166 Sundar        Ande         SANDE       011.44.1346.629268    24-MAR-08    SA_REP         6400               0.1           147               80 +44             1346.629268
+```
+
+We can check the objects for all the editions. We see a copy for each one because we forced their actualization. Without that step, in V2 we would see only the objects that have been changed, and the others would have been inherited from V0.
+```
+SQL> select OBJECT_NAME, OBJECT_TYPE, STATUS, EDITION_NAME from user_objects_ae WHERE edition_name is not null  order by 2,1,4;
+
+                     OBJECT_NAME    OBJECT_TYPE    STATUS    EDITION_NAME
+________________________________ ______________ _________ _______________
+ADD_JOB_HISTORY                  PROCEDURE      VALID     V0
+ADD_JOB_HISTORY                  PROCEDURE      VALID     V2
+SECURE_DML                       PROCEDURE      VALID     V0
+SECURE_DML                       PROCEDURE      VALID     V2
+DATABASECHANGELOG_ACTIONS_TRG    TRIGGER        VALID     V0
+DATABASECHANGELOG_ACTIONS_TRG    TRIGGER        VALID     V2
+EMPLOYEES_FWDXEDITION_TRG        TRIGGER        VALID     V2
+EMPLOYEES_REVXEDITION_TRG        TRIGGER        VALID     V2
+SECURE_EMPLOYEES                 TRIGGER        VALID     V0
+SECURE_EMPLOYEES                 TRIGGER        VALID     V2
+UPDATE_JOB_HISTORY               TRIGGER        VALID     V0
+UPDATE_JOB_HISTORY               TRIGGER        VALID     V2
+COUNTRIES                        VIEW           VALID     V0
+COUNTRIES                        VIEW           VALID     V2
+DEPARTMENTS                      VIEW           VALID     V0
+DEPARTMENTS                      VIEW           VALID     V2
+EMPLOYEES                        VIEW           VALID     V0
+EMPLOYEES                        VIEW           VALID     V2
+EMP_DETAILS_VIEW                 VIEW           VALID     V0
+EMP_DETAILS_VIEW                 VIEW           VALID     V2
+JOBS                             VIEW           VALID     V0
+JOBS                             VIEW           VALID     V2
+JOB_HISTORY                      VIEW           VALID     V0
+JOB_HISTORY                      VIEW           VALID     V2
+LOCATIONS                        VIEW           VALID     V0
+LOCATIONS                        VIEW           VALID     V2
+REGIONS                          VIEW           VALID     V0
+REGIONS                          VIEW           VALID     V2
+
+28 rows selected.
+```
+
+
+## Switch to the new edition
+Now selected application containers can connect to the new edition using either a dedicated service or by issuing an `alter session` (either explicit or in the connection string).
+Once the application is validated, all the new sessions can switch to the new edition by changing the database default:
+```
+ALTER DATABASE DEFAULT EDITION=V2;
+```
+As `HR` user, we achieve that using the helper procedure previously created:
+```
+begin
+  admin.default_edition('V2');
+end;
+/
+```
+However, all the applications that are sensible to the change should explicitly set the edition so that reconnections will not cause any harm.
+
+For this demo, we will integrate this step in a changelog that decommission the old edition.
+
+## Decommission the old edition and redefine the table (optional)
+The last changelog contains the SQL files that cleanup everything, drop the old edition and redefine the table without the `phone_number` column.
+```
+hr.000001.alter_session.sql
+hr.000002.change_default_edition.sql
+hr.000003.drop_old_edition.sql
+hr.000004.drop_x_triggers.sql
+hr.000009.employees_create_interim.sql
+hr.000010.start_redef.sql
+hr.000011.copy_dependents.sql
+hr.000012.finish_redef_table.sql
+hr.000013.drop_interim_table.sql
+```
+
+### 1. Alter the session to use the new edition
+For a new connection, the edition is still the default. Use the new one!
+```
+ALTER SESSION SET EDITION=V2;
+```
+
+### 2. Change the default edition
+
+For this step, we use again a helper procedure that we have defined previously, and that runs with DBA privileges.
+```
+begin
+  admin.default_edition('V2');
+end;
+/
+```
+
+Internally, the procedure just runs `execute immediate 'alter database default edition ='||edition_name;`
+
+
+### 3. Drop the old edition
+Here we use a helper procedure again:
+```
+declare
+  l_parent_edition dba_editions.edition_name%type;
+begin
+  select  PARENT_EDITION_NAME into l_parent_edition
+    from dba_editions where edition_name='V2';
+  admin.drop_edition(l_parent_edition);
+end;
+/
+```
+The user has a `grant select on dba_editions`. The `drop_edition` procedure will execute internally a `execute immediate 'DROP EDITION '||edition_name||' CASCADE`, then a `dbms_editions_utilities.clean_unusable_editions`.
+
+### 4. Drop the cross-edition triggers
+Keeping the cross-edition triggers when the previous edition is no longer in use will just add overhead to the table DMLs.
+
+```
+alter trigger EMPLOYEES_REVXEDITION_TRG disable;
+
+drop trigger EMPLOYEES_REVXEDITION_TRG;
+
+alter trigger EMPLOYEES_FWDXEDITION_TRG disable;
+
+drop trigger EMPLOYEES_FWDXEDITION_TRG;
+```
+
+
+### 5. Redefine the Table: Create the interim table
+```
+create table employees$interim
+    ( employee_id    NUMBER(6)
+    , first_name     VARCHAR2(20)
+    , last_name      VARCHAR2(25)
+    , email          VARCHAR2(25)
+        , country_code          VARCHAR2(3)
+    , phone#   VARCHAR2(20)
+    , hire_date      DATE
+    , job_id         VARCHAR2(10)
+    , salary         NUMBER(8,2)
+    , commission_pct NUMBER(2,2)
+    , manager_id     NUMBER(6)
+    , department_id  NUMBER(4)
+    ) ;
+
+```
+### 6. Redefine the Table: Start the redefinition
+```
+declare
+  l_colmap varchar(512);
+begin
+  l_colmap :=
+    'employee_id
+    , first_name
+    , last_name
+    , email
+    , country_code
+    , phone#
+    , hire_date
+    , job_id
+    , salary
+    , commission_pct
+    , manager_id
+    , department_id';
+
+  dbms_redefinition.start_redef_table (
+    uname        => user,
+    orig_table   => 'EMPLOYEES$0',
+    int_table    => 'EMPLOYEES$INTERIM',
+    col_mapping  => l_colmap
+  );
+end;
+/
+```
+### 7. Redefine the Table: Copy the table dependents
+```
+declare
+  nerrors number;
+begin
+  dbms_redefinition.copy_table_dependents
+    ( user, 'EMPLOYEES$0', 'EMPLOYEES$INTERIM',
+      copy_indexes => dbms_redefinition.cons_orig_params,
+      num_errors => nerrors );
+  if nerrors > 0  then
+    raise_application_error(-20000,'Errors in copying the dependents');
+  end if;
+end;
+/
+```
+
+### 8. Redefine the Table: Finish the redefinition
+```
+begin
+  dbms_redefinition.finish_redef_table ( user, 'EMPLOYEES$0', 'EMPLOYEES$INTERIM');
+  dbms_utility.compile_schema(schema => user, compile_all => FALSE);
+end;
+/
+```
+
+### 9. Redefine the table: Drop the interim table
+```
+drop table employees$interim cascade constraints;
+```
+The cascade constraints is necessary for the self-referencing foreign key (employee->manager).
+
+
+### Run the changelog with liquibase
+The changelog file will look similar to this:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet author="lcaldara" id="hr.000001.alter_session" runAlways="true">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000001.alter_session.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000002.change_default_edition">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000002.change_default_edition.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000003.drop_old_edition">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000003.drop_old_edition.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000004.drop_x_triggers">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000004.drop_x_triggers.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000009.employees_create_interim">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000009.employees_create_interim.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000010.start_redef">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000010.start_redef.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000011.copy_dependents">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000011.copy_dependents.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000012.finish_redef_table">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000012.finish_redef_table.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000013.drop_interim_table">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000013.drop_interim_table.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+</databaseChangeLog>
+```
+
+Let's run it:
+```
+$ rlwrap sql /nolog
+
+SQLcl: Release 21.4 Production on Mon Mar 14 15:18:04 2022
+
+Copyright (c) 1982, 2022, Oracle.  All rights reserved.
+
+SQL> set cloudconfig ../../adb_wallet.zip
+SQL> connect hr/*****@demoadb_medium
+Connected.
+SQL> lb update -changelog hr.00003.edition_v2_post_rollout.xml
+
+ScriptRunner Executing: ALTER SESSION SET EDITION=V2
+Liquibase Executed:ALTER SESSION SET EDITION=V2
+ScriptRunner Executing: begin
+  admin.default_edition('V2');
+end;
+/
+Liquibase Executed:begin
+  admin.default_edition('V2');
+end;
+/
+ScriptRunner Executing: declare
+  l_parent_edition dba_editions.edition_name%type;
+begin
+  select  PARENT_EDITION_NAME into l_parent_edition
+    from dba_editions where edition_name='V2';
+  admin.drop_edition(l_parent_edition);
+end;
+/
+Liquibase Executed:declare
+  l_parent_edition dba_editions.edition_name%type;
+begin
+  select  PARENT_EDITION_NAME into l_parent_edition
+    from dba_editions where edition_name='V2';
+  admin.drop_edition(l_parent_edition);
+end;
+/
+ScriptRunner Executing: alter trigger EMPLOYEES_REVXEDITION_TRG disable
+Liquibase Executed:alter trigger EMPLOYEES_REVXEDITION_TRG disable
+ScriptRunner Executing: drop trigger EMPLOYEES_REVXEDITION_TRG
+Liquibase Executed:drop trigger EMPLOYEES_REVXEDITION_TRG
+ScriptRunner Executing: alter trigger EMPLOYEES_FWDXEDITION_TRG disable
+Liquibase Executed:alter trigger EMPLOYEES_FWDXEDITION_TRG disable
+ScriptRunner Executing: drop trigger EMPLOYEES_FWDXEDITION_TRG
+Liquibase Executed:drop trigger EMPLOYEES_FWDXEDITION_TRG
+ScriptRunner Executing: create table employees$interim
+
+[...]
+
+ScriptRunner Executing: drop table employees$interim cascade constraints
+Liquibase Executed:drop table employees$interim cascade constraints
+######## ERROR SUMMARY ##################
+Errors encountered:0
+
+######## END ERROR SUMMARY ##################
+SQL>
+```

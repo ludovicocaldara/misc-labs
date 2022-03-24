@@ -4,7 +4,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-    <changeSet author="lcaldara" id="hr.000001.edition_v2" runAlways="true">
+    <changeSet author="lcaldara" id="hr.000001.edition_v2">
       <sqlFile dbms="oracle" endDelimiter=";"
                path="hr.00002.edition_v2/hr.000001.edition_v2.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>

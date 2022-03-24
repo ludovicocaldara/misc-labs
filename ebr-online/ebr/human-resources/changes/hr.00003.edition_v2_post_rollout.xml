@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet author="lcaldara" id="hr.000001.alter_session" runAlways="true">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000001.alter_session.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000002.change_default_edition">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000002.change_default_edition.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000003.drop_old_edition">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000003.drop_old_edition.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000004.drop_x_triggers">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000004.drop_x_triggers.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000009.employees_create_interim">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000009.employees_create_interim.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000010.start_redef">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000010.start_redef.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000011.copy_dependents">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000011.copy_dependents.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000012.finish_redef_table">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000012.finish_redef_table.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="hr.000013.drop_interim_table">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="hr.00003.edition_v2_post_rollout/hr.000013.drop_interim_table.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+</databaseChangeLog>
