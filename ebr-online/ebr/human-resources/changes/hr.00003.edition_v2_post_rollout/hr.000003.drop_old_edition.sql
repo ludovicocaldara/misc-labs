@@ -1,3 +1,4 @@
+-- hr.000003.drop_old_edition.sql
 declare
   l_parent_edition dba_editions.edition_name%type;
 begin

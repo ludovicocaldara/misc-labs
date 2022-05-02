@@ -1,3 +1,4 @@
+-- hr.000007.employee_transform_rows.sql
 declare
   cur integer := sys.dbms_sql.open_cursor(security_level => 2);
   no_of_updated_rows integer not null := -1;

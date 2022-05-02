@@ -1,3 +1,4 @@
+-- hr.000006.employee_wait_on_pending_dml.sql
 DECLARE
   scn number := null;
   -- A null or negative value for Timeout will cause a very long wait.

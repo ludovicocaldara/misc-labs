@@ -1,3 +1,4 @@
+-- hr.000010.start_redef.sql
 declare
   l_colmap varchar(512);
 begin

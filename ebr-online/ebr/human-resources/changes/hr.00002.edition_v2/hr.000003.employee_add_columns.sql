@@ -1,3 +1,4 @@
+-- hr.000003.employee_add_columns.sql
 alter session set DDL_LOCK_TIMEOUT=30;
 
 alter table employees$0 add (

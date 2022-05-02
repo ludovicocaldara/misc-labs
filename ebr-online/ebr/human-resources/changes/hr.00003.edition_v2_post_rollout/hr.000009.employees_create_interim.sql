@@ -1,3 +1,4 @@
+-- hr.000009.employees_create_interim.sql
 create table employees$interim
     ( employee_id    NUMBER(6)
     , first_name     VARCHAR2(20)

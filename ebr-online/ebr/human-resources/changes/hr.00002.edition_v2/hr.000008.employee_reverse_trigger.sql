@@ -1,3 +1,4 @@
+-- hr.000008.employee_reverse_trigger.sql
 create or replace trigger employees_revxedition_trg
   before insert or update of country_code,phone# on employees$0
   for each row

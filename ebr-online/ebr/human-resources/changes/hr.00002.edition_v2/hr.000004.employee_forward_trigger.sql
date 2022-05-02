@@ -1,3 +1,4 @@
+-- hr.000004.employee_forward_trigger.sql
 create or replace trigger employees_fwdxedition_trg
   before insert or update of phone_number on employees$0
   for each row
