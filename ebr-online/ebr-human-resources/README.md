@@ -8,14 +8,14 @@
 
 ## Install the base HR schema
 ```
-$ cd misc-labs/ebr-online/ebr/human-resources/initial_setup
+$ cd misc-labs/ebr-online/ebr-human-resources/initial_setup
 $ rlwrap sql /nolog
 
 SQLcl: Release 21.4 Production on Mon Mar 14 15:18:04 2022
 
 Copyright (c) 1982, 2022, Oracle.  All rights reserved.
 
-SQL> set cloudconfig ../../adb_wallet.zip
+SQL> set cloudconfig ../adb_wallet.zip
 SQL> connect admin/*****@demoadb_medium
 Connected.
 SQL> @hr_main
