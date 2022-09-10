@@ -1,0 +1,22 @@
+syntax on
+filetype plugin on
+" a blue that is visible with black background
+hi comment ctermfg=lightblue 
+
+" Following are the keys mapped to run '~/runFromVim.sh' which I use in my demos using tmux
+
+" PageDown calls the 'runFromVim' for the current line only. 
+" Argument is PageDown which means no need to automatically wait on cursor as this is supposed to be controled by a human for each line. 
+" Why PageDown? that's what the remote control sends.
+
+map <PageDown> :.w !sh ~/runFromVim.sh PageDown <CR>j:call system('tmux set-option status-right ' . expand('%:t') . ':' . line('.') . shellescape(' %H:%M') )<CR>z.
+
+" F12 is to run from line 1 to current line. 
+" I use it for the initialization part.
+
+map       <F12> :call system('tmux set-option status-right ' . expand('%:t') . ':' . line('.') . shellescape(' %H:%M') )<CR>z.:1,.w !sh ~/runFromVim.sh F12
+
+map       <F10> :call system('tmux set-option status-right ' . expand('%:t') . ':' . line('.') . shellescape(' %H:%M') )<CR>z.:'<,'>w !sh ~/runFromVim.sh F10
+
+" PageUp sets a tmux buffer with the selected lines and send it directly to the console with paste-buffer.
+map     <PageUp> :w !sh ~/sendBuffer.sh <CR>
