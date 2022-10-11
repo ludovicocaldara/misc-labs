@@ -143,9 +143,10 @@ exit
 --- tmux send-keys -t :.1 C-c
 cd ~/tac
 sql / as sysdba
-select name from v$active_services where con_id>=2;
 alter session set container=PDGSIMA;
+select name from v$active_services where con_id>=2;
 --- tmux resize-pane -Z -t :.1
+set echo on
 @/home/oracle/tac/create_pdb_services.sql
 @/home/oracle/tac/create_pdb_service_trigger.sql
 @/home/oracle/tac/execute_pdb_service_trigger.sql
@@ -203,26 +204,33 @@ exit
 --- tmux select-pane -t :.0
 exit
 ---# ----------------------------------------  SNAPSHOT STANDBY
+--- tmux select-pane -t :.1
+tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 --- tmux select-pane -t :.0
 rlwrap dgmgrl sys/Welcome#Welcome#123@dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com
 show configuration;
 convert database cdgsima_lhr1bm to snapshot standby;
-show configuration;
+show configuration verbose;
 --- tmux select-pane -t :.1
+--- tmux send-keys -t :.1 C-c
 rlwrap sqlplus tacuser/Welcome#Welcome#123@PDGSIMA_SNAP.dbdgsima.misclabs.oraclevcn.com
 desc t
 drop table t;
 create table this_wasnt_there (a varchar2(50));
-insert into this_wasnt_there values ('let''s mess with data!');
+insert into this_wasnt_there values ('Let''s do some tests!');
 commit;
 exit
+tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 --- tmux select-pane -t :.0
 convert database cdgsima_lhr1bm to physical standby;
 --- tmux select-pane -t :.1
+--- tmux send-keys -t :.1 C-c
 rlwrap sqlplus / as sysdba
 alter database open;
 alter pluggable database pdgsima open;
 select name from v$active_services where con_id>=2;
+desc t;
+desc this_wasnt_there;
 exit
 ---# ---------------------------------------  REAL-TIME QUERY 
 rlwrap sqlplus tacuser/Welcome#Welcome#123@PDGSIMA_RO.dbdgsima.misclabs.oraclevcn.com
