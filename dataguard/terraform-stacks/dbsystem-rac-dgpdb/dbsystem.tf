@@ -10,7 +10,7 @@ resource "oci_database_db_system" "db_system" {
       character_set  = var.character_set
       ncharacter_set = var.n_character_set
       db_workload    = var.db_workload
-      pdb_name       = "p${var.system1}"
+      pdb_name       = var.pdb_system1
 
       db_backup_config {
         auto_backup_enabled = false

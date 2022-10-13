@@ -51,6 +51,12 @@ variable "system1" {
 variable "system2" {
 }
 
+variable "pdb_system1" {
+}
+
+variable "pdb_system2" {
+}
+
 # ----------------------------------------------------
 # decent defaults:
 # ----------------------------------------------------
