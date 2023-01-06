@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+	<changeSet id="bddd27e187fd976268f1deafb187491c269e8da6" author="(MOVIESTREAM)-Generated"     >
+		<n0:createSxmlObject objectName="MOVIE_RECOMMENDATIONSXQG$" objectType="INDEX" ownerName="MOVIESTREAM"   >
+			<n0:source><![CDATA[
+  <INDEX xmlns="http://xmlns.oracle.com/ku" version="1.0">
+   <UNIQUE></UNIQUE>
+   <SCHEMA>MOVIESTREAM</SCHEMA>
+   <NAME>MOVIE_RECOMMENDATIONSXQG$</NAME>
+   <TABLE_INDEX>
+      <ON_TABLE>
+         <SCHEMA>MOVIESTREAM</SCHEMA>
+         <NAME>MOVIE_RECOMMENDATIONSGT$$0</NAME>
+      </ON_TABLE>
+      <COL_LIST>
+         <COL_LIST_ITEM>
+            <NAME>EID</NAME>
+         </COL_LIST_ITEM>
+      </COL_LIST>
+      <INDEX_ATTRIBUTES>
+         <PCTFREE>10</PCTFREE>
+         <INITRANS>20</INITRANS>
+         <MAXTRANS>255</MAXTRANS>
+         <STORAGE>
+            <BUFFER_POOL>DEFAULT</BUFFER_POOL>
+            <FLASH_CACHE>DEFAULT</FLASH_CACHE>
+            <CELL_FLASH_CACHE>DEFAULT</CELL_FLASH_CACHE>
+         </STORAGE>
+         <PARALLEL>2</PARALLEL>
+      </INDEX_ATTRIBUTES>
+      <LOCAL_PARTITIONING>
+         <PARTITION_LIST>
+            <PARTITION_LIST_ITEM>
+               <NAME>P1</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P2</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P3</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P4</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P5</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P6</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P7</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+            <PARTITION_LIST_ITEM>
+               <NAME>P8</NAME>
+               <TABLESPACE>DATA</TABLESPACE>
+               <KEYCOMPRESS>N</KEYCOMPRESS>
+            </PARTITION_LIST_ITEM>
+         </PARTITION_LIST>
+      </LOCAL_PARTITIONING>
+   </TABLE_INDEX>
+</INDEX>]]></n0:source>
+		</n0:createSxmlObject>
+	</changeSet>
+</databaseChangeLog>

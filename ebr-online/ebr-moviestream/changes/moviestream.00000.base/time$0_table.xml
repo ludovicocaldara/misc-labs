@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+	<changeSet id="d31eca5e4e20b5f4a8ee60b4409462298ce1e460" author="(MOVIESTREAM)-Generated"     >
+		<n0:createSxmlObject objectName="TIME$0" objectType="TABLE" ownerName="MOVIESTREAM"   >
+			<n0:source><![CDATA[
+  <TABLE xmlns="http://xmlns.oracle.com/ku" version="1.0">
+   <SCHEMA>MOVIESTREAM</SCHEMA>
+   <NAME>TIME$0</NAME>
+   <RELATIONAL_TABLE>
+      <COL_LIST>
+         <COL_LIST_ITEM>
+            <NAME>DAY_ID</NAME>
+            <DATATYPE>DATE</DATATYPE>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>DAY_NAME</NAME>
+            <DATATYPE>VARCHAR2</DATATYPE>
+            <LENGTH>36</LENGTH>
+            <COLLATE_NAME>USING_NLS_COMP</COLLATE_NAME>
+            <VIRTUAL>TO_CHAR("DAY_ID",'fmDAY')</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>DAY_OF_WEEK</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmd') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>DAY_OF_MONTH</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmDD') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>DAY_OF_YEAR</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmDDD') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>WEEK_OF_MONTH</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmw') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>WEEK_OF_YEAR</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmWW') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>MONTH_OF_YEAR</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmMM') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>MONTH_NAME</NAME>
+            <DATATYPE>VARCHAR2</DATATYPE>
+            <LENGTH>36</LENGTH>
+            <COLLATE_NAME>USING_NLS_COMP</COLLATE_NAME>
+            <VIRTUAL>TO_CHAR("DAY_ID",'fmMONTH')</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>MONTH_SHORT_NAME</NAME>
+            <DATATYPE>VARCHAR2</DATATYPE>
+            <LENGTH>12</LENGTH>
+            <COLLATE_NAME>USING_NLS_COMP</COLLATE_NAME>
+            <VIRTUAL>TO_CHAR("DAY_ID",'fmMON')</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>QUARTER_NAME</NAME>
+            <DATATYPE>VARCHAR2</DATATYPE>
+            <LENGTH>7</LENGTH>
+            <COLLATE_NAME>USING_NLS_COMP</COLLATE_NAME>
+            <VIRTUAL>'Q'||TO_CHAR("DAY_ID",'fmq')||'-'||TO_CHAR("DAY_ID",'fmYYYY')</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>QUARTER_OF_YEAR</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmq') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>YEAR_NAME</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+            <VIRTUAL>CAST(TO_CHAR("DAY_ID",'fmYYYY') AS number)</VIRTUAL>
+         </COL_LIST_ITEM>
+      </COL_LIST>
+      <PRIMARY_KEY_CONSTRAINT_LIST>
+         <PRIMARY_KEY_CONSTRAINT_LIST_ITEM>
+            <NAME>PK_DAY</NAME>
+            <COL_LIST>
+               <COL_LIST_ITEM>
+                  <NAME>DAY_ID</NAME>
+               </COL_LIST_ITEM>
+            </COL_LIST>
+            <USING_INDEX>
+               <INDEX_ATTRIBUTES>
+                  <PCTFREE>10</PCTFREE>
+                  <INITRANS>20</INITRANS>
+                  <MAXTRANS>255</MAXTRANS>
+                  <STORAGE>
+                     <INITIAL>65536</INITIAL>
+                     <NEXT>1048576</NEXT>
+                     <MINEXTENTS>1</MINEXTENTS>
+                     <MAXEXTENTS>2147483645</MAXEXTENTS>
+                     <PCTINCREASE>0</PCTINCREASE>
+                     <FREELISTS>1</FREELISTS>
+                     <FREELIST_GROUPS>1</FREELIST_GROUPS>
+                     <BUFFER_POOL>DEFAULT</BUFFER_POOL>
+                     <FLASH_CACHE>DEFAULT</FLASH_CACHE>
+                     <CELL_FLASH_CACHE>DEFAULT</CELL_FLASH_CACHE>
+                  </STORAGE>
+                  <TABLESPACE>DATA</TABLESPACE>
+                  <LOGGING>Y</LOGGING>
+               </INDEX_ATTRIBUTES>
+            </USING_INDEX>
+         </PRIMARY_KEY_CONSTRAINT_LIST_ITEM>
+      </PRIMARY_KEY_CONSTRAINT_LIST>
+      <DEFAULT_COLLATION>USING_NLS_COMP</DEFAULT_COLLATION>
+      <PHYSICAL_PROPERTIES>
+         <HEAP_TABLE>
+            <SEGMENT_ATTRIBUTES>
+               <SEGMENT_CREATION_IMMEDIATE></SEGMENT_CREATION_IMMEDIATE>
+               <PCTFREE>10</PCTFREE>
+               <PCTUSED>40</PCTUSED>
+               <INITRANS>10</INITRANS>
+               <MAXTRANS>255</MAXTRANS>
+               <STORAGE>
+                  <INITIAL>65536</INITIAL>
+                  <NEXT>1048576</NEXT>
+                  <MINEXTENTS>1</MINEXTENTS>
+                  <MAXEXTENTS>2147483645</MAXEXTENTS>
+                  <PCTINCREASE>0</PCTINCREASE>
+                  <FREELISTS>1</FREELISTS>
+                  <FREELIST_GROUPS>1</FREELIST_GROUPS>
+                  <BUFFER_POOL>DEFAULT</BUFFER_POOL>
+                  <FLASH_CACHE>DEFAULT</FLASH_CACHE>
+                  <CELL_FLASH_CACHE>DEFAULT</CELL_FLASH_CACHE>
+               </STORAGE>
+               <TABLESPACE>DATA</TABLESPACE>
+               <LOGGING>Y</LOGGING>
+            </SEGMENT_ATTRIBUTES>
+            <COMPRESS>N</COMPRESS>
+         </HEAP_TABLE>
+      </PHYSICAL_PROPERTIES>
+   </RELATIONAL_TABLE>
+</TABLE>]]></n0:source>
+		</n0:createSxmlObject>
+	</changeSet>
+</databaseChangeLog>

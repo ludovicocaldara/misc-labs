@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+	<changeSet id="2704b23737aa1804f3fa19d2871ddeee4f634dac" author="(MOVIESTREAM)-Generated"     >
+		<n0:createSxmlObject objectName="EXT_POTENTIAL_CHURNERS$0" objectType="TABLE" ownerName="MOVIESTREAM"   >
+			<n0:source><![CDATA[
+  <TABLE xmlns="http://xmlns.oracle.com/ku" version="1.0">
+   <SCHEMA>MOVIESTREAM</SCHEMA>
+   <NAME>EXT_POTENTIAL_CHURNERS$0</NAME>
+   <RELATIONAL_TABLE>
+      <COL_LIST>
+         <COL_LIST_ITEM>
+            <NAME>CUST_ID</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>WILL_CHURN</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+         </COL_LIST_ITEM>
+         <COL_LIST_ITEM>
+            <NAME>PROB_CHURN</NAME>
+            <DATATYPE>NUMBER</DATATYPE>
+         </COL_LIST_ITEM>
+      </COL_LIST>
+      <DEFAULT_COLLATION>USING_NLS_COMP</DEFAULT_COLLATION>
+      <PHYSICAL_PROPERTIES>
+         <EXTERNAL_TABLE>
+            <ACCESS_DRIVER_TYPE>ORACLE_LOADER</ACCESS_DRIVER_TYPE>
+            <DEFAULT_DIRECTORY>DATA_PUMP_DIR</DEFAULT_DIRECTORY>
+            <ACCESS_PARAMETERS>RECORDS IGNORE_HEADER=1 IGNORE_BLANK_LINES DELIMITED BY DETECTED NEWLINE NOLOGFILE NOBADFILE NODISCARDFILE READSIZE=10000000 
+    FIELDS TERMINATED BY ',' DATE_FORMAT DATE MASK 'YYYY-MM-DD' REMOVE_QUOTES NULLIF=BLANKS LRTRIM TRUNCATE_COLUMNS MISSING FIELD VALUES ARE NULL  
+  </ACCESS_PARAMETERS>
+            <LOCATION>
+               <LOCATION_ITEM>
+                  <NAME>https://objectstorage.us-ashburn-1.oraclecloud.com/n/c4u04/b/moviestream_sandbox/o/potential_churners/*.csv</NAME>
+               </LOCATION_ITEM>
+            </LOCATION>
+            <REJECT_LIMIT>0</REJECT_LIMIT>
+         </EXTERNAL_TABLE>
+      </PHYSICAL_PROPERTIES>
+      <TABLE_PROPERTIES>
+         <PARALLEL>AUTOMATIC</PARALLEL>
+      </TABLE_PROPERTIES>
+   </RELATIONAL_TABLE>
+</TABLE>]]></n0:source>
+		</n0:createSxmlObject>
+	</changeSet>
+</databaseChangeLog>

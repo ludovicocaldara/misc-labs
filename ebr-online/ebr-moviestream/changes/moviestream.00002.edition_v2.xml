@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet author="lcaldara" id="moviestream.000001.edition_v2">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000001.edition_v2.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000002.alter_session" runAlways="true">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000002.alter_session.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000003.continents_add_table">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000003.continents_add_table.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000004.countries_add_table">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000004.countries_add_table.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000005.continents_editioning_views">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000005.continents_editioning_views.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000006.countries_editioning_views">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000006.countries_editioning_views.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000007.countries_continents_populate">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000007.countries_continents_populate.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000008.customer_serbia_code_amend">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000008.customer_serbia_code_amend.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000009.customer_add_fk">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000009.customer_add_fk.sql"
+               relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000010.view_customer">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000010.view_customer.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000011.customer_reverse_trigger">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000011.customer_reverse_trigger.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.000012.customer_reverse_trigger">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="moviestream.00002.edition_v2/moviestream.000012.customer_reverse_trigger.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+    <changeSet author="lcaldara" id="moviestream.actualize_all">
+      <sqlFile dbms="oracle" endDelimiter=";"
+               path="common/actualize_all.sql"
+               relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
+    </changeSet>
+</databaseChangeLog>

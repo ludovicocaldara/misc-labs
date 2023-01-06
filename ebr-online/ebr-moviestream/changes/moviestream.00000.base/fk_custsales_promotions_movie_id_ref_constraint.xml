@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+	<changeSet id="36c9102290cd6fdeec97585e667883d389f730f8" author="(MOVIESTREAM)-Generated"     >
+		<n0:createOracleRefConstraint objectName="FK_CUSTSALES_PROMOTIONS_MOVIE_ID" objectType="REF_CONSTRAINT" ownerName="MOVIESTREAM"   >
+			<n0:source><![CDATA[
+  ALTER TABLE "MOVIESTREAM"."CUSTSALES_PROMOTIONS$0" ADD CONSTRAINT "FK_CUSTSALES_PROMOTIONS_MOVIE_ID" FOREIGN KEY ("MOVIE_ID")
+	  REFERENCES "MOVIESTREAM"."MOVIE$0" ("MOVIE_ID") ENABLE;]]></n0:source>
+		</n0:createOracleRefConstraint>
+	</changeSet>
+</databaseChangeLog>

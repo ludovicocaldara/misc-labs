@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog 
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:n0="http://www.oracle.com/xml/ns/dbchangelog-ext" 
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog 
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+	<changeSet id="8259ae1847a8ce7e7670da32b99d63c280ba2427" author="(MOVIESTREAM)-Generated"     >
+		<n0:createOracleFunction objectName="LATLON_TO_GEOMETRY" objectType="FUNCTION" ownerName="MOVIESTREAM"   >
+			<n0:source><![CDATA[
+  CREATE OR REPLACE EDITIONABLE FUNCTION "MOVIESTREAM"."LATLON_TO_GEOMETRY" (
+               latitude   IN  NUMBER,
+               longitude  IN  NUMBER
+            ) RETURN sdo_geometry
+               DETERMINISTIC
+               IS
+               BEGIN
+               --first ensure valid lat/lon input
+               IF latitude IS NULL OR longitude IS NULL
+               OR latitude NOT BETWEEN -90 AND 90
+               OR longitude NOT BETWEEN -180 AND 180 THEN
+                 RETURN NULL;
+               ELSE
+               --return point geometry
+                RETURN sdo_geometry(
+                        2001, --identifier for a point geometry
+                        4326, --identifier for lat/lon coordinate system
+                        sdo_point_type(
+                         longitude, latitude, NULL),
+                        NULL, NULL);
+               END IF;
+               END;
+        
+/]]></n0:source>
+		</n0:createOracleFunction>
+	</changeSet>
+</databaseChangeLog>
