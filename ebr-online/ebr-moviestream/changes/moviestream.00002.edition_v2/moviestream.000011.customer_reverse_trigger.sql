@@ -1,3 +1,4 @@
+-- moviestream.000011.customer_reverse_trigger.sql
 create or replace trigger customer_revxedition_trg
   before insert or update of country_code on customer$0
   for each row

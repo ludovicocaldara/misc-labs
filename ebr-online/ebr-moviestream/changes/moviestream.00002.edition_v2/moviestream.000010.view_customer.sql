@@ -1,4 +1,4 @@
--- moviestream.000005.view_customers.sql
+-- moviestream.000010.view_customer.sql
 CREATE OR REPLACE EDITIONING VIEW customer AS
    SELECT
       CUST_ID
