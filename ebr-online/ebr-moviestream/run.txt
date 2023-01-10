@@ -1,0 +1,104 @@
+--- tmux split-window -h
+--- tmux select-layout even-horizontal
+--- tmux select-pane -t :.0
+--- tmux setw synchronize-panes on
+clear
+cd ~/misc-labs/ebr-online/ebr-moviestream/ 
+--- tmux setw synchronize-panes off
+---# ----- REINITIALIZATION OF THE USER, SKIP IT IF ALREADY DONE
+--- tmux select-pane -t :.0
+export WALLET=$HOME/Wallet_DK4NMBFXL9DKW0S7.zip
+cd initial_setup
+sql -cloudconfig $WALLET admin/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+drop user moviestream cascade;
+@reset_edition
+@moviestream_main
+Welcome#Welcome#123
+./
+DK4NMBFXL9DKW0S7_tp
+---# it takes a while (2-3- minutes)
+@reset_edition
+set pages 40
+select object_name, object_type, status, edition_name from user_objects_ae where edition_name is not null  order by 4,2;
+select * from dba_editions;
+exit
+clear
+---# The demo to record starts here
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+desc customer
+ddl customer
+desc customer$0
+select cust_id, first_name, last_name, country, country_code, continent
+from customer fetch first 5 rows only;
+select object_name, object_type, status, edition_name
+ from user_objects_ae where edition_name is not null  order by 4,2;
+
+--- tmux select-pane -t :.1
+cd ~/misc-labs/ebr-online/ebr-moviestream/changes
+export WALLET=$HOME/Wallet_DK4NMBFXL9DKW0S7.zip
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+lb status -changelog-file moviestream.00002.edition_v2.xml
+exit
+clear
+cat moviestream.00002.edition_v2/moviestream.000* | more
+--- tmux split-window -h
+--- tmux select-layout even-horizontal
+--- tmux select-pane -t :.2
+--- tmux split-window -v
+--- tmux select-pane -t :.2
+cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
+ls -l v*
+python v1/insert_data.py
+--- tmux select-pane -t :.3
+cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
+python v1/insert_data.py
+--- tmux select-pane -t :.1
+export WALLET=$HOME/Wallet_DK4NMBFXL9DKW0S7.zip
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+lb update -changelog-file moviestream.00002.edition_v2.xml
+--- tmux select-pane -t :.0
+desc customer
+select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
+select object_name, object_type, status, edition_name
+ from user_objects_ae where edition_name is not null  order by 4,2;
+select cust_id, first_name, last_name, country, country_code, continent
+ from customer fetch first 5 rows only;
+--- tmux select-pane -t :.1
+select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
+alter session set edition=v2;
+select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
+desc customer
+select cust_id, first_name, last_name, country, country_code, continent
+ from customer fetch first 5 rows only;
+select cus.cust_id, cus.first_name, cus.last_name, cus.country_code, cou.country, con.continent
+ from customer cus join countries cou on cus.country_code = cou.country_code
+ join continents con on (cou.continent_code = con.continent_code) fetch first 5 rows only;
+--- tmux select-pane -t :.3
+cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
+--- tmux send-keys -t :.3 C-c
+python v2/insert_data.py
+--- tmux select-pane -t :.2
+--- tmux send-keys -t :.2 C-c
+--- tmux select-pane -t :.0
+exit
+--- tmux select-pane -t :.1
+begin
+  admin.default_edition('V2');
+end;
+/
+--- tmux select-pane -t :.0
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
+--- tmux select-pane -t :.1
+lb status -changelog-file  moviestream.00003.edition_v2_post_rollout.xml
+exit
+cat moviestream.00003.edition_v2_post_rollout/moviestream.000* | more
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+lb update -changelog-file  moviestream.00003.edition_v2_post_rollout.xml
+--- tmux select-pane -t :.2
+python v1/insert_data.py
+python v2/insert_data.py
+--- tmux select-pane -t :.0
+desc customer$0
+select object_name, object_type, status, edition_name
+ from user_objects_ae where edition_name is not null  order by 4,2;

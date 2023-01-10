@@ -8,7 +8,7 @@ import math
 
 # App version
 app_version = "V1"
-db_edition  = "ORA$BASE"
+db_edition  = "V0"
 
 # Read the data from the CSV
 input_file = os.path.join(os.path.dirname(__file__), 'customers_it.csv')

@@ -59,9 +59,9 @@
                path="moviestream.00002.edition_v2/moviestream.000011.customer_reverse_trigger.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000012.customer_reverse_trigger">
+    <changeSet author="lcaldara" id="moviestream.000012.customer_reverse_trigger_enable">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000012.customer_reverse_trigger.sql"
+               path="moviestream.00002.edition_v2/moviestream.000012.customer_reverse_trigger_enable.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
     <changeSet author="lcaldara" id="moviestream.actualize_all">
