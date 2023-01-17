@@ -67,9 +67,11 @@ select cust_id, first_name, last_name, country, country_code, continent
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
 alter session set edition=v2;
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
-desc customer
 select cust_id, first_name, last_name, country, country_code, continent
  from customer fetch first 5 rows only;
+desc customer
+desc countries
+desc continents
 select cus.cust_id, cus.first_name, cus.last_name, cus.country_code, cou.country, con.continent
  from customer cus join countries cou on cus.country_code = cou.country_code
  join continents con on (cou.continent_code = con.continent_code) fetch first 5 rows only;
@@ -102,3 +104,16 @@ python v2/insert_data.py
 desc customer$0
 select object_name, object_type, status, edition_name
  from user_objects_ae where edition_name is not null  order by 4,2;
+---# Stop the recording here!
+--- tmux send-keys -t :.3 C-c
+--- tmux send-keys -t :.2 C-c
+--- tmux select-pane -t :.3
+exit
+--- tmux select-pane -t :.2
+exit
+--- tmux select-pane -t :.1
+exit
+exit
+--- tmux select-pane -t :.0
+exit
+exit
