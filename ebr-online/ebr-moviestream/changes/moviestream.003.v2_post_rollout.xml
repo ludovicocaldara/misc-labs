@@ -4,49 +4,49 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-    <changeSet author="lcaldara" id="moviestream.000001.alter_session" runAlways="true">
+    <changeSet author="lcaldara" id="moviestream.0001.alter_session" runAlways="true">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000001.alter_session.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0001.alter_session.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000002.change_default_edition">
+    <changeSet author="lcaldara" id="moviestream.0002.change_default_edition">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000002.change_default_edition.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0002.change_default_edition.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000003.drop_old_edition">
+    <changeSet author="lcaldara" id="moviestream.0003.drop_old_edition">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000003.drop_old_edition.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0003.drop_old_edition.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000004.drop_x_triggers">
+    <changeSet author="lcaldara" id="moviestream.0004.drop_x_triggers">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000004.drop_x_triggers.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0004.drop_x_triggers.sql"
                relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000009.customer_create_interim">
+    <changeSet author="lcaldara" id="moviestream.0009.customer_create_interim">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000009.customer_create_interim.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0009.customer_create_interim.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000010.start_redef">
+    <changeSet author="lcaldara" id="moviestream.0010.start_redef">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000010.start_redef.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0010.start_redef.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000011.copy_dependents">
+    <changeSet author="lcaldara" id="moviestream.0011.copy_dependents">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000011.copy_dependents.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0011.copy_dependents.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000012.finish_redef_table">
+    <changeSet author="lcaldara" id="moviestream.0012.finish_redef_table">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000012.finish_redef_table.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0012.finish_redef_table.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000013.drop_interim_table">
+    <changeSet author="lcaldara" id="moviestream.0013.drop_interim_table">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00003.edition_v2_post_rollout/moviestream.000013.drop_interim_table.sql"
+               path="moviestream.003.v2_post_rollout/moviestream.0013.drop_interim_table.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
 </databaseChangeLog>

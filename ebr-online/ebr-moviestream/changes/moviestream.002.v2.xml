@@ -4,64 +4,64 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-    <changeSet author="lcaldara" id="moviestream.000001.edition_v2">
+    <changeSet author="lcaldara" id="moviestream.0001.v2">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000001.edition_v2.sql"
+               path="moviestream.002.v2/moviestream.0001.edition_v2.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000002.alter_session" runAlways="true">
+    <changeSet author="lcaldara" id="moviestream.0002.alter_session" runAlways="true">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000002.alter_session.sql"
+               path="moviestream.002.v2/moviestream.0002.alter_session.sql"
                relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000003.continents_add_table">
+    <changeSet author="lcaldara" id="moviestream.0003.continents_add_table">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000003.continents_add_table.sql"
+               path="moviestream.002.v2/moviestream.0003.continents_add_table.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000004.countries_add_table">
+    <changeSet author="lcaldara" id="moviestream.0004.countries_add_table">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000004.countries_add_table.sql"
+               path="moviestream.002.v2/moviestream.0004.countries_add_table.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000005.continents_editioning_views">
+    <changeSet author="lcaldara" id="moviestream.0005.continents_editioning_views">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000005.continents_editioning_views.sql"
+               path="moviestream.002.v2/moviestream.0005.continents_editioning_views.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000006.countries_editioning_views">
+    <changeSet author="lcaldara" id="moviestream.0006.countries_editioning_views">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000006.countries_editioning_views.sql"
+               path="moviestream.002.v2/moviestream.0006.countries_editioning_views.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000007.countries_continents_populate">
+    <changeSet author="lcaldara" id="moviestream.0007.countries_continents_populate">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000007.countries_continents_populate.sql"
+               path="moviestream.002.v2/moviestream.0007.countries_continents_populate.sql"
                relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000008.customer_serbia_code_amend">
+    <changeSet author="lcaldara" id="moviestream.0008.customer_serbia_code_amend">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000008.customer_serbia_code_amend.sql"
+               path="moviestream.002.v2/moviestream.0008.customer_serbia_code_amend.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000009.customer_add_fk">
+    <changeSet author="lcaldara" id="moviestream.0009.customer_add_fk">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000009.customer_add_fk.sql"
+               path="moviestream.002.v2/moviestream.0009.customer_add_fk.sql"
                relativeToChangelogFile="true" splitStatements="true" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000010.view_customer">
+    <changeSet author="lcaldara" id="moviestream.0010.view_customer">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000010.view_customer.sql"
+               path="moviestream.002.v2/moviestream.0010.view_customer.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000011.customer_reverse_trigger">
+    <changeSet author="lcaldara" id="moviestream.0011.customer_reverse_trigger">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000011.customer_reverse_trigger.sql"
+               path="moviestream.002.v2/moviestream.0011.customer_reverse_trigger.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
-    <changeSet author="lcaldara" id="moviestream.000012.customer_reverse_trigger_enable">
+    <changeSet author="lcaldara" id="moviestream.0012.customer_reverse_trigger_enable">
       <sqlFile dbms="oracle" endDelimiter=";"
-               path="moviestream.00002.edition_v2/moviestream.000012.customer_reverse_trigger_enable.sql"
+               path="moviestream.002.v2/moviestream.0012.customer_reverse_trigger_enable.sql"
                relativeToChangelogFile="true" splitStatements="false" stripComments="false"/>
     </changeSet>
     <changeSet author="lcaldara" id="moviestream.actualize_all">
