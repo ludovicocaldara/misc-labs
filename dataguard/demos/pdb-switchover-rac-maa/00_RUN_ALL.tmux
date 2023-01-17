@@ -18,7 +18,6 @@ sudo su - oracle
 clear
 ps -eaf | grep pmon
 echo $ORACLE_UNQNAME
-####  THIS IS THE PRIMARY
 ---# ---------------------------------------- CONNECTION TO THE SECOND HOST
 --- tmux select-pane -t :.1
 eval "export $(tmux show-environment remote_host)"
@@ -33,8 +32,7 @@ sudo su - oracle
 clear
 ps -eaf | grep pmon
 echo $ORACLE_UNQNAME
-### THIS IS THE STANDBY
----# ----------------------------------------  CONFIGURING THE PRIMARY
+---# ----------------------------------------  CONFIGURING THE FIRST PRIMARY
 --- tmux select-pane -t :.0
 sqlplus / as sysdba
 alter database flashback on;
@@ -42,6 +40,9 @@ alter database force logging;
 alter database add standby logfile thread 1 group 11 size 1073741824 ;
 alter database add standby logfile thread 1 group 12 size 1073741824 ;
 alter database add standby logfile thread 1 group 13 size 1073741824 ;
+alter database add standby logfile thread 2 group 21 size 1073741824 ;
+alter database add standby logfile thread 2 group 22 size 1073741824 ;
+alter database add standby logfile thread 2 group 23 size 1073741824 ;
 alter system set db_files=1024 scope=spfile;
 alter system set log_buffer=256M scope=spfile;
 alter system set db_lost_write_protect=typical scope=spfile;
@@ -51,22 +52,55 @@ alter system set parallel_threads_per_cpu=1 scope=spfile;
 alter system set standby_file_management=auto scope=spfile;
 alter system set dg_broker_start=true scope=spfile;
 alter database clear logfile group 11, group 12, group 13;
-startup force 
----# ----------------------------------------  CONFIGURING THE STANDBY
+alter database clear logfile group 21, group 22, group 23;
+exit
+srvctl stop database -d ${ORACLE_UNQNAME} -o immediate
+srvctl start database -d ${ORACLE_UNQNAME} 
+---# ----------------------------------------  CONFIGURING THE SECOND PRIMARY
 --- tmux select-pane -t :.1
-rm -rf /u02/app/oracle/oradata/${ORACLE_UNQNAME,,}/${ORACLE_UNQNAME^^}/*
-rm -rf /u03/app/oracle/redo/${ORACLE_UNQNAME^^}/*
-rm -f /u02/app/oracle/oradata/${ORACLE_UNQNAME,,}/control01.ctl /u03/app/oracle/fast_recovery_area/${ORACLE_UNQNAME,,}/control02.ctl
-cat $ORACLE_HOME/network/admin/listener.ora
+sqlplus / as sysdba
+alter database flashback on;
+alter database force logging;
+alter database add standby logfile thread 1 group 11 size 1073741824 ;
+alter database add standby logfile thread 1 group 12 size 1073741824 ;
+alter database add standby logfile thread 1 group 13 size 1073741824 ;
+alter database add standby logfile thread 2 group 21 size 1073741824 ;
+alter database add standby logfile thread 2 group 22 size 1073741824 ;
+alter database add standby logfile thread 2 group 23 size 1073741824 ;
+alter system set db_files=1024 scope=spfile;
+alter system set log_buffer=256M scope=spfile;
+alter system set db_lost_write_protect=typical scope=spfile;
+alter system set db_block_checksum=typical scope=spfile;
+alter system set db_flashback_retention_target=1440 scope=spfile;
+alter system set parallel_threads_per_cpu=1 scope=spfile;
+alter system set standby_file_management=auto scope=spfile;
+alter system set dg_broker_start=true scope=spfile;
+alter database clear logfile group 11, group 12, group 13;
+alter database clear logfile group 21, group 22, group 23;
+exit
+srvctl stop database -d ${ORACLE_UNQNAME} -o immediate
+srvctl start database -d ${ORACLE_UNQNAME} 
+
+---# ----------------------------------------  CONFIGURING THE FIRST STANDBY (BOSTON)
+--- tmux select-pane -t :.1
+exit
+sudo su - grid
+cat <<EOF >> $ORACLE_HOME/network/admin/listener.ora
+SID_LIST_LISTENER =
+  (SID_LIST = (SID_DESC = (SID_NAME = boston2) (GLOBAL_DBNAME=boston_lhrabc_DGMGRL.dbdgprac.misclabs.oraclevcn.com) (ORACLE_HOME = /u01/app/oracle/product/21.0.0.0/dbhome_1)))
+EOF
+
 cat $ORACLE_HOME/network/admin/sqlnet.ora
 cat $ORACLE_HOME/dbs/initcdgsima.ora | grep name
+export ORACLE_UNQNAME=boston_lhrabc
+export ORACLE_SID=boston1
 sqlplus / as sysdba
 startup nomount force
 exit
 ---# ----------------------------------------   DUPLICATE FOR STANDBY
 rlwrap rman \
- target sys/Welcome#Welcome#123@dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com \
- auxiliary=sys/Welcome#Welcome#123@dgsima2.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1bm_DGMGRL.dbdgsima.misclabs.oraclevcn.com
+ target sys/Welcome#Welcome#123@boston-scan.dbdgprac.misclabs.oraclevcn.com:1521/boston_lhr1f5.dbdgprac.misclabs.oraclevcn.com \
+  auxiliary=sys/Welcome#Welcome#123@newyork1-vip.dbdgprac.misclabs.oraclevcn.com:1521/boston_lhrabc_DGMGRL.dbdgprac.misclabs.oraclevcn.com
 run {
 allocate channel c1 device type disk;
 allocate auxiliary channel a1 device type disk;
@@ -77,10 +111,8 @@ exit
 ---# ----------------------------------------   DATA GUARD CONFIGURATION
 --- tmux select-pane -t :.1
 sqlplus / as sysdba
-alter database add standby logfile thread 1 group 11 size 1073741824 ;
-alter database add standby logfile thread 1 group 12 size 1073741824 ;
-alter database add standby logfile thread 1 group 13 size 1073741824 ;
 alter database clear logfile group 11, group 12, group 13;
+alter database clear logfile group 21, group 22, group 23;
 exit
 dgmgrl sys/Welcome#Welcome#123@dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com
 create configuration cdgsima primary database is cdgsima_lhr1pq connect identifier is 'dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com';
