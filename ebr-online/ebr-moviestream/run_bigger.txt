@@ -3,10 +3,7 @@
 --- tmux select-layout even-horizontal
 --- tmux select-pane -t :.0
 --- tmux setw synchronize-panes on
-unset PROMPT_COMMAND
-export PS1='ebruser@alwaysfree $ '
-export WALLET=c:\\users\\lcaldara\\Wallet_DK4NMBFXL9DKW0S7.zip
-clear
+unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ;  export WALLET=$HOME/Wallet_DK4NMBFXL9DKW0S7.zip ; clear
 cd ~/misc-labs/ebr-online/ebr-moviestream/ 
 --- tmux setw synchronize-panes off
 ---# ----- REINITIALIZATION OF THE USER, SKIP IT IF ALREADY DONE
@@ -21,31 +18,28 @@ Welcome#Welcome#123
 DK4NMBFXL9DKW0S7_tp
 ---# it takes a while (2-3- minutes)
 @reset_edition
-set pages 45
 select object_name, object_type, status, edition_name from user_objects_ae where edition_name is not null  order by 4,2;
 select * from dba_editions;
 exit
 clear
----# The demo to record starts here
+---# -----------------------------------------------------
+---# START The demo to record starts here
+---# -----------------------------------------------------
 sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
-set pages 45
-desc customer
-ddl customer
-desc customer$0
 select first_name, last_name, country, country_code, continent
 from customer fetch first 5 rows only;
+ddl customer
+desc customer$0
 select object_name, object_type, status, edition_name
  from user_objects_ae where edition_name is not null  order by 4,2;
 --- tmux select-pane -t :.1
 cd ~/misc-labs/ebr-online/ebr-moviestream/changes
-sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
-lb status -changelog moviestream.002.v2.xml
-exit
-clear
 cat moviestream.002.v2/moviestream.0* | grep -v "^insert"| more
 --- tmux split-window -h
 unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ; export WALLET=c:\\users\\lcaldara\\Wallet_DK4NMBFXL9DKW0S7.zip; clear
---- tmux select-layout even-horizontal
+---# tmux select-layout even-horizontal
+--- tmux select-pane -t :.0
+--- tmux resizep -L 22
 --- tmux select-pane -t :.2
 --- tmux split-window -v
 --- tmux select-pane -t :.3
@@ -58,30 +52,37 @@ python v1/insert_data.py
 cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
 python v1/insert_data.py
 --- tmux select-pane -t :.1
-export WALLET=$HOME/Wallet_DK4NMBFXL9DKW0S7.zip
 sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
 lb update -changelog-file moviestream.002.v2.xml
 --- tmux select-pane -t :.0
 desc customer
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
-select object_name, object_type, status, edition_name
- from user_objects_ae where edition_name is not null  order by 4,2;
-select cust_id, first_name, last_name, country, country_code, continent
+select first_name, last_name, country, country_code, continent
  from customer fetch first 5 rows only;
+select object_name, object_type, edition_name
+ from user_objects_ae where edition_name is not null  order by edition_name, object_type;
+select cus.first_name, cus.last_name,
+   cus.country_code, cou.country, con.continent
+ from customer cus join countries cou
+    on cus.country_code = cou.country_code
+ join continents con
+    on (cou.continent_code = con.continent_code)
+ fetch first 5 rows only;
 --- tmux select-pane -t :.1
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
 alter session set edition=v2;
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
-select cust_id, first_name, last_name, country, country_code, continent
- from customer fetch first 5 rows only;
 desc customer
 desc countries
 desc continents
-select cus.cust_id, cus.first_name, cus.last_name, cus.country_code, cou.country, con.continent
- from customer cus join countries cou on cus.country_code = cou.country_code
- join continents con on (cou.continent_code = con.continent_code) fetch first 5 rows only;
+select cus.first_name, cus.last_name,
+   cus.country_code, cou.country, con.continent
+ from customer cus join countries cou
+    on cus.country_code = cou.country_code
+ join continents con
+    on (cou.continent_code = con.continent_code)
+ fetch first 5 rows only;
 --- tmux select-pane -t :.3
-cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
 --- tmux send-keys -t :.3 C-c
 python v2/insert_data.py
 --- tmux select-pane -t :.2
@@ -93,23 +94,23 @@ begin
   admin.default_edition('V2');
 end;
 /
+--- tmux select-pane -t :.2
+python v2/insert_data.py
 --- tmux select-pane -t :.0
 sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
 --- tmux select-pane -t :.1
-lb status -changelog-file  moviestream.003.v2_post_rollout.xml
-exit
 cat moviestream.003.v2_post_rollout/moviestream.0* | more
 sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
 lb update -changelog-file  moviestream.003.v2_post_rollout.xml
---- tmux select-pane -t :.2
-python v1/insert_data.py
-python v2/insert_data.py
 --- tmux select-pane -t :.0
 desc customer$0
-select object_name, object_type, status, edition_name
- from user_objects_ae where edition_name is not null  order by 4,2;
+select object_name, object_type, edition_name
+ from user_objects_ae where edition_name is not null 
+  order by edition_name, object_type;
+---# --------------------------------------
 ---# Stop the recording here!
+---# --------------------------------------
 --- tmux send-keys -t :.3 C-c
 --- tmux send-keys -t :.2 C-c
 --- tmux select-pane -t :.3

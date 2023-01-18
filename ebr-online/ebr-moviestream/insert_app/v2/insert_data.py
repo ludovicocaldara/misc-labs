@@ -17,7 +17,8 @@ df = pd.DataFrame(data)
 df = df.astype(object).where(pd.notnull(df),None)
 
 # DB connection
-os.environ['TNS_ADMIN'] = '/home/ludovico_c/DK4NMBFXL9DKW0S7'
+wallet_loc = os.path.join(os.environ['HOME'],'DK4NMBFXL9DKW0S7')
+os.environ['TNS_ADMIN'] = wallet_loc
 connection = cx_Oracle.connect(user='moviestream', password='Welcome#Welcome#123', dsn='DK4NMBFXL9DKW0S7_TP', cclass="EBR_Demo", purity=cx_Oracle.ATTR_PURITY_SELF)
 print( "Version: " + connection.version )
 
@@ -146,7 +147,7 @@ for row in df.itertuples():
   except cx_Oracle.IntegrityError:
     pass
   else:
-    print("App version: %s - Edition: %s - Country Code %s - Inserting customer: %s %s" % (app_version, db_edition, row.COUNTRY_CODE, row.FIRST_NAME, row.LAST_NAME))
+    print("Edition: %s\n  Country Code %s\n  Customer: %s %s" % (db_edition, row.COUNTRY_CODE, row.FIRST_NAME, row.LAST_NAME))
     time.sleep(2)
 
 
