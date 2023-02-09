@@ -51,7 +51,7 @@ alter system set parallel_threads_per_cpu=1 scope=spfile;
 alter system set standby_file_management=auto scope=spfile;
 alter system set dg_broker_start=true scope=spfile;
 alter database clear logfile group 11, group 12, group 13;
-startup force 
+-- startup force 
 ---# ----------------------------------------  CONFIGURING THE STANDBY
 --- tmux select-pane -t :.1
 rm -rf /u02/app/oracle/oradata/${ORACLE_UNQNAME,,}/${ORACLE_UNQNAME^^}/*
@@ -81,6 +81,7 @@ alter database add standby logfile thread 1 group 11 size 1073741824 ;
 alter database add standby logfile thread 1 group 12 size 1073741824 ;
 alter database add standby logfile thread 1 group 13 size 1073741824 ;
 alter database clear logfile group 11, group 12, group 13;
+alter database clear logfile group 1, group 2, group 3;
 exit
 dgmgrl sys/Welcome#Welcome#123@dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com
 create configuration cdgsima primary database is cdgsima_lhr1pq connect identifier is 'dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com';
@@ -208,7 +209,7 @@ exit
 tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 --- tmux select-pane -t :.0
 rlwrap dgmgrl sys/Welcome#Welcome#123@dgsima1.dbdgsima.misclabs.oraclevcn.com:1521/cdgsima_lhr1pq.dbdgsima.misclabs.oraclevcn.com
-show configuration;
+show configuration verbose;
 convert database cdgsima_lhr1bm to snapshot standby;
 show configuration verbose;
 --- tmux select-pane -t :.1

@@ -1,0 +1,38 @@
+PDGSIMA_RO.dbdgsima.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=240)(RETRY_COUNT=150)(RETRY_DELAY=2)
+    (TRANSPORT_CONNECT_TIMEOUT=3)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=dgsima1.dbdgsima.misclabs.oraclevcn.com)(PORT=1521)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=dgsima2.dbdgsima.misclabs.oraclevcn.com)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME = PDGSIMA_RO.dbdgsima.misclabs.oraclevcn.com)))
+
+PDGSIMA_SNAP.dbdgsima.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=240)(RETRY_COUNT=150)(RETRY_DELAY=2)
+    (TRANSPORT_CONNECT_TIMEOUT=3)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=dgsima1.dbdgsima.misclabs.oraclevcn.com)(PORT=1521)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=dgsima2.dbdgsima.misclabs.oraclevcn.com)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME = PDGSIMA_SNAP.dbdgsima.misclabs.oraclevcn.com)))
+
+
+
+PDGSIMA_RW.dbdgsima.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=240)(RETRY_COUNT=150)(RETRY_DELAY=2)
+    (TRANSPORT_CONNECT_TIMEOUT=3)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=dgsima1.dbdgsima.misclabs.oraclevcn.com)(PORT=1521)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=dgsima2.dbdgsima.misclabs.oraclevcn.com)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME = PDGSIMA_RW.dbdgsima.misclabs.oraclevcn.com)))
+
