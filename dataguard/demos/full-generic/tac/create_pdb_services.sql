@@ -2,7 +2,7 @@ DECLARE
     e_service_error EXCEPTION;
     PRAGMA EXCEPTION_INIT (e_service_error  , -44786);
     params dbms_service.svc_parameter_array;
-    service_name v.name%TYPE;
+    service_name v$services.name%TYPE;
 BEGIN
     -- parameters for TAC
     params('FAILOVER_TYPE')            :='AUTO';
