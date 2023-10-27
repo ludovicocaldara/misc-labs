@@ -1,0 +1,76 @@
+{
+    "workshoptitle": "Protect Your Data with Oracle Active Data Guard",
+    "help": "livelabs-help-db_us@oracle.com",
+    "tutorials": [
+        {
+            "title": "Get Started",
+            "description": "Login to Oracle Cloud",
+            "filename": "https://oracle-livelabs.github.io/common/labs/cloud-login/cloud-login-livelabs2.md"
+        },
+        {
+            "title": "Introduction",
+            "description":"Workshop Overview",
+            "publisheddate": "26/02/2021",
+            "filename":"../../introduction/introduction.md"
+        },
+        {
+            "title": "Lab 1: Connecting to the Database ",
+            "description":"Connection to the databases",
+            "type": "livelabs",
+            "filename":"../../connect-db/connect-db-cs.md"
+        },
+        {
+            "title": "Lab 2: Performing a switchover",
+            "description":"Perform a switchover",
+            "publisheddate": "26/02/2021",
+            "filename":"../../switchover/switchover-cs.md"
+        },
+        {
+            "title": "Lab 3: Perform a Failover ",
+            "description":"Perform a Failover",
+            "publisheddate": "26/02/2021",
+            "filename":"../../failover/failover-cs.md"
+        },
+        {
+            "title": "Lab 4: Enable Active Data Guard DML Redirection ",
+            "description":"Enable Active Data Guard DML Redirection",
+            "publisheddate": "26/02/2021",
+            "filename":"../../dml-redirection/dml-redirection-cs.md"
+        },
+        {
+            "title": "Lab 5: Automatic block media recovery",
+            "description":"Learn about Automatic block media recovery ",
+            "publisheddate": "26/02/2021",
+            "filename":"../../media-recovery/media-recovery-cs.md"
+        },
+        {
+            "title": "Lab 6: Restore point propagation",
+            "description":"Learn about Restore point propagation ",
+            "publisheddate": "26/02/2021",
+            "filename":"../../restore-point-propagation/restore-point-propagation-cs.md"
+        },
+        {
+            "title": "Lab 7: Change the SYS password",
+            "description":"Change the SYS password",
+            "publisheddate": "26/02/2021",
+            "filename":"../../sys-passwords/sys-passwords-cs.md"
+        },
+        {
+            "title": "Appendix 1: Creation of the primary Database",
+            "description":"Setup the 19c Primary Database",
+            "publisheddate": "26/02/2021",
+            "filename":"../../primary-db/primary-db.md"
+        },
+        {
+            "title": "Appendix 2: Creation of the Standby ",
+            "description":"Setup the standby Database",
+            "publisheddate": "26/02/2021",
+            "filename":"../../standby-db/standby-db.md"
+        },
+        {
+            "title": "Need Help?",
+            "description": "Solutions to Common Problems and Directions for Receiving Live Help",
+            "filename": "https://oracle-livelabs.github.io/common/labs/need-help/need-help-livelabs.md"
+        }
+    ]
+}

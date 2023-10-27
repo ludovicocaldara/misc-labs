@@ -1,0 +1,17 @@
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = dgsima1.dbdgsima.misclabs.oraclevcn.com)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+    )
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (SID_NAME = cdgsima)
+      (GLOBAL_DBNAME=cdgsima_lhr1pq_DGMGRL.dbdgsima.misclabs.oraclevcn.com)
+      (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
+    )
+  )
+
