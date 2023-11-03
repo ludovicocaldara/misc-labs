@@ -7,7 +7,7 @@ BEGIN
   SELECT COUNT(*)
     INTO v_ro_service_count
   FROM
-    v
+    v$active_services
   WHERE
     name = v_service_ro;
   IF sys_context('userenv', 'database_role') IN (

@@ -40,7 +40,7 @@ grep SID_LIST_LISTENER $ORACLE_HOME/network/admin/listener.ora || cat <<EOF >> $
 SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
-      (SID_NAME = cdgsima)
+      (SID_NAME = chol23c)
       (GLOBAL_DBNAME=${ORACLE_UNQNAME}_DGMGRL.dbhol23c.misclabs.oraclevcn.com)
       (ORACLE_HOME = $ORACLE_HOME)
     )
@@ -101,7 +101,6 @@ lsnrctl reload
 cat $ORACLE_HOME/network/admin/tnsnames.ora
 grep _rw $ORACLE_HOME/network/admin/tnsnames.ora || sh  /home/oracle/misc-labs/dataguard/demos/full-generic-23c/demo/tnsadmin/tns.sh >> $ORACLE_HOME/network/admin/tnsnames.ora
 cat $ORACLE_HOME/network/admin/tnsnames.ora
-
 ---# ----------------------------------------  COPY THE TDE WALLET
 --- tmux select-pane -t :.0
 cd /opt/oracle/dcs/commonstore/wallets/$ORACLE_UNQNAME/tde

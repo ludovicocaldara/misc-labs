@@ -1,6 +1,6 @@
 L_pdb="phol23c"
 L_types="rw ro snap"
-L_hosts="hol23c0.dbhol23c.misclabs.oraclevcn.com hol23c1.dbhol23c.misclabs.oraclevcn.com"
+L_hosts="hol23c0 hol23c1"
 L_domain="dbhol23c.misclabs.oraclevcn.com"
 
 for L_type in ${L_types} ; do

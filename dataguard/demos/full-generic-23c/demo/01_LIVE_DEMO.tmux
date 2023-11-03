@@ -37,17 +37,17 @@ echo $ORACLE_UNQNAME
 --- tmux resize-pane -Z -t :.0
 dgmgrl sys/Welcome#Welcome#123
 prepare database for data guard
-  with db_unique_name is chol23c_hwq_lhr
+  with db_unique_name is chol23c_rxd_lhr
   db_recovery_file_dest_size is "200g"
   db_recovery_file_dest is "/u03/app/oracle/fast_recovery_area"
   restart;
 ---# retry it to show it's idem potent
 prepare database for data guard
-  with db_unique_name is chol23c_hwq_lhr
+  with db_unique_name is chol23c_rxd_lhr
   db_recovery_file_dest_size is "200g"
   db_recovery_file_dest is "/u03/app/oracle/fast_recovery_area" ;
---- tmux resize-pane -Z -t :.0
 exit
+--- tmux resize-pane -Z -t :.0
 cat $ORACLE_HOME/network/admin/listener.ora
 lsnrctl reload
 ---# ----------------------------------------  CONFIGURING THE STANDBY
@@ -67,8 +67,8 @@ exit
 ---# ----------------------------------------   DUPLICATE FOR STANDBY
 --- tmux select-pane -t :.1
 rman \
- target sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com \
- auxiliary=sys/Welcome#Welcome#123@hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r7b_lhr_DGMGRL.dbhol23c.misclabs.oraclevcn.com
+ target sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com \
+ auxiliary=sys/Welcome#Welcome#123@hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r2j_lhr_DGMGRL.dbhol23c.misclabs.oraclevcn.com
 run {
 allocate channel c1 device type disk;
 allocate auxiliary channel a1 device type disk;
@@ -87,47 +87,46 @@ alter system set db_files=1024 scope=spfile;
 alter system set log_buffer=256M scope=spfile;
 alter system set db_lost_write_protect=typical scope=spfile;
 alter system set db_block_checksum=typical scope=spfile;
-alter system set db_flashback_retention_target=1440 scope=spfile;
+alter system set db_flashback_retention_target=120 scope=spfile;
 alter system set parallel_threads_per_cpu=1 scope=spfile;
 alter system set standby_file_management=auto scope=spfile;
 startup force mount
+alter database flashback on;
 exit
 ---# ----------------------------------------   DATA GUARD CONFIGURATION
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com
-create configuration chol23c primary database is chol23c_hwq_lhr connect identifier is 'hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com';
-add database chol23c_r7b_lhr as connect identifier is 'hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r7b_lhr.dbhol23c.misclabs.oraclevcn.com';
-edit database chol23c_hwq_lhr set property StaticConnectIdentifier='hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr_DGMGRL.dbhol23c.misclabs.oraclevcn.com';
-edit database chol23c_r7b_lhr set property StaticConnectIdentifier='hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r7b_lhr_DGMGRL.dbhol23c.misclabs.oraclevcn.com';
+dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
+create configuration chol23c primary database is chol23c_rxd_lhr connect identifier is 'hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com';
+add database chol23c_r2j_lhr as connect identifier is 'hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r2j_lhr.dbhol23c.misclabs.oraclevcn.com';
+edit database chol23c_rxd_lhr set property StaticConnectIdentifier='hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr_DGMGRL.dbhol23c.misclabs.oraclevcn.com';
+edit database chol23c_r2j_lhr set property StaticConnectIdentifier='hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r2j_lhr_DGMGRL.dbhol23c.misclabs.oraclevcn.com';
 enable configuration;
 --- tmux resize-pane -Z -t :.1
 VALIDATE STATIC CONNECT IDENTIFIER FOR ALL;
 VALIDATE NETWORK CONFIGURATION FOR ALL;
-VALIDATE DATABASE VERBOSE chol23c_hwq_lhr;
+VALIDATE DATABASE VERBOSE chol23c_rxd_lhr;
 ---# new in 23c: parameter and property mismatch at the end
-VALIDATE DATABASE VERBOSE chol23c_r7b_lhr ;
+VALIDATE DATABASE VERBOSE chol23c_r2j_lhr ;
 
 ---# new in 23c: strict all
-VALIDATE DATABASE VERBOSE chol23c_r7b_lhr STRICT ALL;
-VALIDATE DATABASE chol23c_r7b_lhr SPFILE
+VALIDATE DATABASE VERBOSE chol23c_r2j_lhr STRICT ALL;
+VALIDATE DATABASE chol23c_r2j_lhr SPFILE
 ---# new in 23c
-VALIDATE DGConnectIdentifier hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com;
-VALIDATE DGConnectIdentifier hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r7b_lhr.dbhol23c.misclabs.oraclevcn.com;
+VALIDATE DGConnectIdentifier hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com;
+VALIDATE DGConnectIdentifier hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r2j_lhr.dbhol23c.misclabs.oraclevcn.com;
 
 show configuration verbose;
-show database verbose chol23c_hwq_lhr;
-show database verbose chol23c_r7b_lhr;
-edit database chol23c_r7b_lhr set state=apply-off;
-edit database chol23c_r7b_lhr set state=apply-on;
-edit database chol23c_hwq_lhr set state=transport-off;
-edit database chol23c_hwq_lhr set state=transport-on;
-edit database chol23c_r7b_lhr set property logshipping=off;
-edit database chol23c_r7b_lhr set property logshipping=on;
+edit database chol23c_r2j_lhr set state=apply-off;
+edit database chol23c_r2j_lhr set state=apply-on;
+edit database chol23c_rxd_lhr set state=transport-off;
+edit database chol23c_rxd_lhr set state=transport-on;
+edit database chol23c_r2j_lhr set property logshipping=off;
+edit database chol23c_r2j_lhr set property logshipping=on;
 --- tmux resize-pane -Z -t :.1
 exit
 tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 ---# ---------------------------------------- SHOWING THE PROCESSES ON THE PRIMARY
 --- tmux select-pane -t :.0
-sql sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com as sysdba
+sql sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com as sysdba
 alter session set nls_date_format='YYYY-MM-DD HH24:MI:SS';
 alter session set nls_timestamp_format='YYYY-MM-DD HH24:MI:SS';
 --- tmux resize-pane -Z -t :.0
@@ -135,7 +134,7 @@ select * from v$dataguard_config;
 select name, role, action, client_role, group#, sequence#, block#, block_count, dest_id  from v$dataguard_process;
 ---# ---------------------------------------- SHOWING THE PROCESSES ON THE STANDBY
 --- tmux select-pane -t :.0
-connect sys/Welcome#Welcome#123@hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r7b_lhr.dbhol23c.misclabs.oraclevcn.com as sysdba
+connect sys/Welcome#Welcome#123@hol23c1.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_r2j_lhr.dbhol23c.misclabs.oraclevcn.com as sysdba
 select * from v$dataguard_config;
 select * from v$dataguard_stats;
 select * from v$dataguard_status;
@@ -143,26 +142,22 @@ select * from v$dataguard_status;
 select name, role, action, client_role, group#, sequence#, block#, block_count, dest_id  from v$dataguard_process;
 ---# new in 23c
 select member, dataguard_role, property, value, scope, valid_role from v$dg_broker_property;
-select * from v$standby_log;
-select flashback_on, force_logging from v$database;
-alter database flashback on;
 set serveroutput on
 DECLARE
   severity BINARY_INTEGER;
   retcode  BINARY_INTEGER;
 BEGIN
-  retcode := DBMS_DG.SET_STATE_APPLY_OFF ( member_name => 'chol23c_r7b_lhr', severity => severity);
+  retcode := DBMS_DG.SET_STATE_APPLY_OFF ( member_name => 'chol23c_r2j_lhr', severity => severity);
   dbms_output.put_line('retcode: '||to_char(retcode)||'  severity: '||to_char(severity));
 END;
 /
-alter database flashback on;
 select * from v$dataguard_stats;
 select name, role, action, action_dur, client_role, sequence#, block#, dest_id  from v$dataguard_process;
 DECLARE
   severity BINARY_INTEGER;
   retcode  BINARY_INTEGER;
 BEGIN
-  retcode := DBMS_DG.SET_STATE_APPLY_ON ( member_name => 'chol23c_r7b_lhr', severity => severity);
+  retcode := DBMS_DG.SET_STATE_APPLY_ON ( member_name => 'chol23c_r2j_lhr', severity => severity);
   dbms_output.put_line('retcode: '||to_char(retcode)||'  severity: '||to_char(severity));
 END;
 /
@@ -170,11 +165,11 @@ END;
 exit
 ---# ---------------------------------------- EXECUTING A SWITCHOVER
 --- tmux select-pane -t :.0
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com
+dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
 show configuration
-validate database chol23c_r7b_lhr strict all
+validate database chol23c_r2j_lhr strict all
 set time on
-switchover to chol23c_r7b_lhr
+switchover to chol23c_r2j_lhr
 show configuration
 exit
 ---# ---------------------------------------- CREATE THE SERVICES ON THE PRIMARY (WHICH IS ON NODE 2 NOW)
@@ -233,10 +228,10 @@ create table t (a varchar2(50));
 select * from t;
 insert into t values ('TAC test');
 --- tmux select-pane -t :.0
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com
+dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
 show configuration
 set time on
-switchover to chol23c_hwq_lhr
+switchover to chol23c_rxd_lhr
 --- tmux select-pane -t :.1
 commit;
 select * from t;
@@ -248,9 +243,9 @@ exit
 --- tmux select-pane -t :.1
 tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 --- tmux select-pane -t :.0
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com
+dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
 show configuration ;
-convert database chol23c_r7b_lhr to snapshot standby;
+convert database chol23c_r2j_lhr to snapshot standby;
 show configuration ;
 --- tmux select-pane -t :.1
 --- tmux send-keys -t :.1 C-c
@@ -263,7 +258,7 @@ commit;
 exit
 tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 --- tmux select-pane -t :.0
-convert database chol23c_r7b_lhr to physical standby;
+convert database chol23c_r2j_lhr to physical standby;
 --- tmux select-pane -t :.1
 --- tmux send-keys -t :.1 C-c
 sqlplus / as sysdba
@@ -277,7 +272,7 @@ desc t
 select * from this_wasnt_there;
 exit
 --- tmux select-pane -t :.0
-show database chol23c_r7b_lhr
+show database chol23c_r2j_lhr
 ---# Real Time Query:    ON
 exit
 ---# tmux resize-pane -Z -t :.0
@@ -294,7 +289,7 @@ exit
 --- tmux select-pane -t :.0
 ---# --------------------------------------- MAX AVAILABILITY
 exit
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com
+dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
 -- show/edit all members new in 23c
 show all members LogXptMode;
 edit all members set property LogXptMode='SYNC';

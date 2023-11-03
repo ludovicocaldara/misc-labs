@@ -45,10 +45,10 @@ echo $ORACLE_UNQNAME
 --- ## CONFIGURING THE PRIMARY
 ---# ----------------------------------------------
 --- tmux select-pane -t :.0
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_hwq_lhr.dbhol23c.misclabs.oraclevcn.com
+dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
 show configuration
-switchover to chol23c_hwq_lhr
-edit database chol23c_r7b_lhr set state='APPLY-OFF';
+switchover to chol23c_rxd_lhr
+edit database chol23c_r2j_lhr set state='APPLY-OFF';
 EDIT CONFIGURATION SET PROTECTION MODE AS MaxPerformance;
 remove configuration;
 exit
