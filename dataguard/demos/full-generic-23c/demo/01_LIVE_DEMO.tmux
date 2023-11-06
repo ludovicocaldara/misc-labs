@@ -91,7 +91,6 @@ alter system set db_flashback_retention_target=120 scope=spfile;
 alter system set parallel_threads_per_cpu=1 scope=spfile;
 alter system set standby_file_management=auto scope=spfile;
 startup force mount
-alter database flashback on;
 exit
 ---# ----------------------------------------   DATA GUARD CONFIGURATION
 dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
@@ -141,7 +140,9 @@ select * from v$dataguard_status;
 ---# the process PR00 is a parallel recovery slave of MRP0. It should show the sequence and block increasing
 select name, role, action, client_role, group#, sequence#, block#, block_count, dest_id  from v$dataguard_process;
 ---# new in 23c
-select member, dataguard_role, property, value, scope, valid_role from v$dg_broker_property;
+select member, dataguard_role, property, substr(value,1,20), scope, valid_role from v$dg_broker_property;
+select flashback_on from v$database;
+alter database flashback on;
 set serveroutput on
 DECLARE
   severity BINARY_INTEGER;
@@ -152,6 +153,8 @@ BEGIN
 END;
 /
 select * from v$dataguard_stats;
+alter database flashback on;
+select flashback_on from v$database;
 select name, role, action, action_dur, client_role, sequence#, block#, dest_id  from v$dataguard_process;
 DECLARE
   severity BINARY_INTEGER;
@@ -259,6 +262,7 @@ exit
 tail -f  /u01/app/oracle/diag/rdbms/${ORACLE_UNQNAME,,}/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
 --- tmux select-pane -t :.0
 convert database chol23c_r2j_lhr to physical standby;
+---# ---------------------------------------  REAL-TIME QUERY 
 --- tmux select-pane -t :.1
 --- tmux send-keys -t :.1 C-c
 sqlplus / as sysdba
@@ -266,7 +270,6 @@ alter database open;
 alter pluggable database PHOL23C open;
 select name from v$active_services where con_id>=2;
 exit
----# ---------------------------------------  REAL-TIME QUERY 
 sqlplus tacuser/Welcome#Welcome#123@PHOL23C_RO.dbhol23c.misclabs.oraclevcn.com
 desc t
 select * from this_wasnt_there;
@@ -296,7 +299,7 @@ edit all members set property LogXptMode='SYNC';
 show all members LogXptMode;
 EDIT CONFIGURATION  SET PROTECTION MODE  as MaxAvailability;
 --- tmux select-pane -t :.1
-rlwrap sqlplus tacuser/Welcome#Welcome#123@PHOL23C_RO.dbhol23c.misclabs.oraclevcn.com      
+sqlplus tacuser/Welcome#Welcome#123@PHOL23C_RO.dbhol23c.misclabs.oraclevcn.com      
 alter session set standby_max_data_delay=0;
 select * from t;
 alter session sync with primary;
@@ -305,13 +308,25 @@ exit
 exit
 ---# ----------------------------------------- DML REDIRECT
 --- tmux select-pane -t :.1
-rlwrap sqlplus tacuser/Welcome#Welcome#123@PHOL23C_RO.dbhol23c.misclabs.oraclevcn.com
+sqlplus tacuser/Welcome#Welcome#123@PHOL23C_RO.dbhol23c.misclabs.oraclevcn.com
 insert into t values ('DML test');
 ---#	    ORA-16000: database or pluggable database open for read-only access
 alter session enable ADG_REDIRECT_DML;
 insert into t values ('DML test');
 commit;
 exit
+---# ----------------------------------------- AWR SNAPSHOTS
+--- tmux select-pane -t :.1
+sqlplus / as sysdba
+BEGIN
+  dbms_workload_repository.enable_snapshot_service(
+    snap_type => 'WORKLOAD',
+    snap_action => 'CREATE');
+END;
+/
+select dbms_workload_repository.create_snapshot from dual;
+select dbms_workload_repository.create_snapshot from dual;
+@?/rdbms/admin/awrrpti
 ---# -----------------------------------------  AUTOMATIC BLOCK REPAIR
 --- tmux select-pane -t :.1
 exit
@@ -331,5 +346,5 @@ exit
 --- tmux send-keys -t :.1 C-c
 exit
 exit
-ssh opc@hol23c1
+ssh opc@hol23c1.dbhol23c
 sudo su - oracle
