@@ -31,7 +31,7 @@ sudo su - oracle
 clear
 ps -eaf | grep pmon
 echo $ORACLE_UNQNAME
-### THIS IS THE STANDBY
+####  THIS IS THE STANDBY
 ---# ----------------------------------------  CONFIGURING THE PRIMARY
 --- tmux select-pane -t :.0
 --- tmux resize-pane -Z -t :.0
