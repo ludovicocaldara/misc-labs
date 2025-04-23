@@ -8,7 +8,7 @@ terraform {
   }
 }
 provider "oci" {
-  region           = var.ociRegionIdentifier
+  region           = var.region
 }
 #*************************************
 #             DB System

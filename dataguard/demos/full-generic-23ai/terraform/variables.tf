@@ -3,7 +3,9 @@
 # ----------------------------------
 
 variable "compartment_ocid" {
-  default = "ocid1.compartment.oc1..aaaaaaaa7minmjq4rkcnleal3j2qhuuitkmhhqffz43tcnifjwm4a7qsdrua"
+}
+
+variable "region" {
 }
 
 variable "ssh_public_key" {
