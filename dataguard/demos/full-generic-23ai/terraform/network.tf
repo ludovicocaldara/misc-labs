@@ -40,7 +40,7 @@ resource "oci_core_route_table" "misc_labs_priv_rt" {
 # ---------------------------------------------
 resource "oci_core_subnet" "lab_subnet" {
   display_name      = "subnet_${var.lab_name}_${var.resId}"
-  dns_label         = "${var.lab_name}-${var.resId}"
+  dns_label         = "${var.lab_name}${var.resId}"
 
   compartment_id    = var.compartment_ocid
   vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
