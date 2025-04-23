@@ -22,7 +22,7 @@ data "oci_core_security_lists" "misc_labs_securitylist" {
 
 
 resource "oci_core_route_table" "misc_labs_priv_rt" {
-  display_name   = "misc_labs_priv_rt_${var.lab_name}"
+  display_name   = "priv_rt_${var.lab_name}_${var.resId}"
 
   compartment_id = var.compartment_ocid
   vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
@@ -38,24 +38,13 @@ resource "oci_core_route_table" "misc_labs_priv_rt" {
 # ---------------------------------------------
 # Setup the subnet
 # ---------------------------------------------
-resource "oci_core_subnet" "db_subnet" {
-  display_name      = "db_subnet_${var.lab_name}"
-  dns_label         = "db${var.lab_name}"
+resource "oci_core_subnet" "lab_subnet" {
+  display_name      = "subnet_${var.lab_name}_${var.resId}"
+  dns_label         = "${var.lab_name}-${var.resId}"
 
   compartment_id    = var.compartment_ocid
   vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
-  cidr_block        = var.db_subnet_cidr
-  route_table_id    = oci_core_route_table.misc_labs_priv_rt.id
-  security_list_ids = [data.oci_core_security_lists.misc_labs_securitylist.security_lists[0].id]
-}
-
-resource "oci_core_subnet" "app_subnet" {
-  display_name      = "app_subnet_${var.lab_name}"
-  dns_label         = "app${var.lab_name}"
-
-  compartment_id    = var.compartment_ocid
-  vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
-  cidr_block        = var.app_subnet_cidr
+  cidr_block        = var.lab_subnet_cidr
   route_table_id    = oci_core_route_table.misc_labs_priv_rt.id
   security_list_ids = [data.oci_core_security_lists.misc_labs_securitylist.security_lists[0].id]
 }
