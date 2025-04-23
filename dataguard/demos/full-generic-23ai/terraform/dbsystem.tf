@@ -36,6 +36,7 @@ resource "oci_database_db_system" "adg_db_system" {
   }
   source = "NONE"
   subnet_id               = oci_core_subnet.lab_subnet.id
+  shape                   = var.db_shape
   ssh_public_keys         = [ var.ssh_public_key ]
   hostname                = "${var.lab_name}${count.index}-${var.resId}"
   license_model           = var.license_model
