@@ -44,7 +44,7 @@ resource "oci_core_subnet" "lab_subnet" {
 
   compartment_id    = var.compartment_ocid
   vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
-  cidr_block        = var.lab_subnet_cidr
+  cidr_block        = "10.0.${var.resId}.0/24"
   route_table_id    = oci_core_route_table.misc_labs_priv_rt.id
   security_list_ids = [data.oci_core_security_lists.misc_labs_securitylist.security_lists[0].id]
 }

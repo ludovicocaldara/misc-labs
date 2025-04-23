@@ -26,12 +26,6 @@ variable "license_model" {
   default = "BRING_YOUR_OWN_LICENSE"
 }
 
-variable "lab_subnet_cidr" {
-  description = "CIDR block for the subnet."
-  default = "10.0.${var.resId}.0/24"
-}
-
-
 variable "cpu_core_count" {
   default = "2"
 }
