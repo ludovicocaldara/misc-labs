@@ -2,6 +2,9 @@
 # Tenancy information
 # ----------------------------------
 
+variable "compartment_ocid" {}
+variable "region" {}
+
 variable "ssh_public_key" {
 }
 
