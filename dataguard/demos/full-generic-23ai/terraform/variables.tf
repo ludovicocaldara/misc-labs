@@ -26,6 +26,12 @@ variable "license_model" {
   default = "BRING_YOUR_OWN_LICENSE"
 }
 
+variable "lab_subnet_cidr" {
+  description = "CIDR block for the subnet."
+  default = "10.0.${var.resId}.0/24"
+}
+
+
 variable "cpu_core_count" {
   default = "2"
 }
@@ -44,8 +50,8 @@ variable "db_version" {
 }
 
 variable "resId" {
-  description = "A unique number to tell multiple labs apart."
-  default = "7979"
+  description = "A unique number to tell multiple labs apart. The subnet will use 10.0.resId.0/24 as CIDR, so use it carefully!"
+  default = "79"
 }
 
 variable "node_count" {
