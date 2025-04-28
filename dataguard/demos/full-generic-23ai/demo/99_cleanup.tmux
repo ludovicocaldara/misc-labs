@@ -1,64 +1,39 @@
---- tmux setenv remote_host 140.238.100.79
---- export remote_host=140.238.100.79
---- ## testing ping to server...
---- ping -w 5000 -n 1 ${remote_host} || exit
---- tmux display-message "server ok."
-
 --- tmux split-window
----#
----# ----------------------------------------------
----# CONNECTION TO THE FIRST HOST
----# ----------------------------------------------
+---# ---------------------------------------  CONNECTION TO THE FIRST HOST
 --- tmux select-pane -t :.0
-eval "export $(tmux show-environment remote_host)"
-echo remote_host=$remote_host 
---- tmux send-keys 'ssh opc@${remote_host}' C-M
---- sleep 1
-echo -e '$if Gdb\n"\\e[6~": "\\n"\n$endif' > ~/.inputrc
---- 
-ssh opc@hol23c0.dbhol23c
---- sleep 1
+ssh opc@adghol0-23.adghol23.misclabs.oraclevcn.com
 sudo su - oracle
 clear
 ps -eaf | grep pmon
 echo $ORACLE_UNQNAME
-# THIS IS THE PRIMARY
----#
----# ----------------------------------------------
----# CONNECTION TO THE SECOND HOST
----# ----------------------------------------------
+####  THIS IS THE PRIMARY
+---# ---------------------------------------- CONNECTION TO THE SECOND HOST
 --- tmux select-pane -t :.1
-eval "export $(tmux show-environment remote_host)"
-echo remote_host=$remote_host 
---- tmux send-keys 'ssh opc@${remote_host}' C-M
---- sleep 1
-echo -e '$if Gdb\n"\\e[6~": "\\n"\n$endif' > ~/.inputrc
---- 
-ssh opc@hol23c1.dbhol23c
---- sleep 1
+ssh opc@adghol1-23.adghol23.misclabs.oraclevcn.com
 sudo su - oracle
 clear
 ps -eaf | grep pmon
 echo $ORACLE_UNQNAME
-# THIS IS THE STANDBY
+### THIS IS THE STANDBY
+
 ---# ----------------------------------------------
 --- ## CONFIGURING THE PRIMARY
 ---# ----------------------------------------------
 --- tmux select-pane -t :.0
-dgmgrl sys/Welcome#Welcome#123@hol23c0.dbhol23c.misclabs.oraclevcn.com:1521/chol23c_rxd_lhr.dbhol23c.misclabs.oraclevcn.com
+dgmgrl sys/WElcome123##@adghol_site0
 show configuration
-switchover to chol23c_rxd_lhr
-edit database chol23c_r2j_lhr set state='APPLY-OFF';
+switchover to adghol_site0
+edit database adghol_site1 set state='APPLY-OFF';
 EDIT CONFIGURATION SET PROTECTION MODE AS MaxPerformance;
 remove configuration;
 exit
 --- tmux select-pane -t :.1
-sqlplus / as sysdba
+sql / as sysdba
 shutdown abort
 exit
 --- tmux select-pane -t :.0
-sqlplus / as sysdba
-alter session set container=PHOL23C;
+sql / as sysdba
+alter session set container=MYPDB;
 drop tablespace CORRUPTIONTEST including contents and datafiles;
 DECLARE
 
