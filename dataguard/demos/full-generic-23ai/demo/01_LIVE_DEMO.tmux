@@ -47,7 +47,6 @@ rm -rf /u02/app/oracle/oradata/${ORACLE_UNQNAME,,}/${ORACLE_UNQNAME^^}/*
 rm -rf /u03/app/oracle/redo/${ORACLE_UNQNAME^^}/*
 rm -f /u02/app/oracle/oradata/${ORACLE_UNQNAME,,}/control01.ctl /u03/app/oracle/fast_recovery_area/${ORACLE_UNQNAME,,}/control02.ctl
 cat $ORACLE_HOME/network/admin/listener.ora
-lsnrctl reload
 sql / as sysdba
 startup nomount force
 exit
@@ -166,9 +165,8 @@ show configuration verbose
 switchover to adghol_site0
 show configuration verbose
 exit
----# ---------------------------------------- CREATE THE SERVICES ON THE PRIMARY (WHICH IS ON NODE 2 NOW)
+---# ---------------------------------------- CREATE THE SERVICES ON THE PRIMARY
 --- tmux select-pane -t :.1
---- tmux send-keys -t :.1 C-c
 sql sys/WElcome123##@adghol_site0 as sysdba
 alter pluggable database all discard state;
 cd ~/database-maa/data-guard/active-data-guard-23ai/prepare-host/scripts/tac
@@ -182,7 +180,6 @@ set echo on
 @execute_pdb_service_trigger.sql
 select name from v$active_services;
 select name, aq_ha_notification, commit_outcome, session_state_consistency, failover_restore from v$active_services;
-select name, aq_ha_notification, commit_outcome, session_state_consistency, failover_restore from v$active_services where con_id >=2;
 exit
 cat $ORACLE_HOME/network/admin/tnsnames.ora
 --- tmux resize-pane -Z -t :.1
