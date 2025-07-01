@@ -39,7 +39,7 @@ variable "db_shape" {
 }
 
 variable "db_version" {
-  default = "23.7.0.25.01"
+  default = "23.8.0.25.04"
   description = "Version for the DB system. This lab supports 23ai only."
 }
 
