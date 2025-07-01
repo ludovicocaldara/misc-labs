@@ -6,7 +6,7 @@ var rid varchar2(25);
 col segment_name format a20;
 
 drop tablespace corruptiontest including contents and datafiles;
-create tablespace corruptiontest datafile '/home/oracle/corruptiontest01.dbf' size 1m;
+create tablespace corruptiontest datafile '/home/oracle/corruptiontest01.dbf' size 8m;
 create table will_be_corrupted(myfield varchar2(50)) tablespace corruptiontest;
 insert into will_be_corrupted(myfield) values ('This will have a problem') returning rowid into :rid;
 print
