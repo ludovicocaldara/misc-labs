@@ -3,19 +3,19 @@
 --- tmux select-layout even-horizontal
 --- tmux select-pane -t :.0
 --- tmux setw synchronize-panes on
-unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ;  export WALLET=$HOME/Wallet_DK4NMBFXL9DKW0S7.zip ; clear
+unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ;  export WALLET=$HOME/Wallet_demoadb.zip ; clear
 cd ~/misc-labs/ebr-online/ebr-moviestream/ 
 --- tmux setw synchronize-panes off
 ---# ----- REINITIALIZATION OF THE USER, SKIP IT IF ALREADY DONE
 --- tmux select-pane -t :.0
 cd initial_setup
-sql -cloudconfig $WALLET admin/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+sql -cloudconfig $WALLET admin/\"$ADB_PASSWORD\"@demoadb_tp
 drop user moviestream cascade;
 @reset_edition
 @moviestream_main
 Welcome#Welcome#123
 ./
-DK4NMBFXL9DKW0S7_tp
+demoadb_tp
 ---# it takes a while (2-3- minutes)
 @reset_edition
 select object_name, object_type, status, edition_name from user_objects_ae where edition_name is not null  order by 4,2;
@@ -25,7 +25,7 @@ clear
 ---# -----------------------------------------------------
 ---# START The demo to record starts here
 ---# -----------------------------------------------------
-sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@demoadb_tp
 select first_name, last_name, country, country_code, continent
 from customer fetch first 5 rows only;
 ddl customer
@@ -36,23 +36,25 @@ select object_name, object_type, status, edition_name
 cd ~/misc-labs/ebr-online/ebr-moviestream/changes
 cat moviestream.002.v2/moviestream.0* | grep -v "^insert"| more
 --- tmux split-window -h
-unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ; export WALLET=c:\\users\\lcaldara\\Wallet_DK4NMBFXL9DKW0S7.zip; clear
+unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ;  export WALLET=$HOME/Wallet_demoadb.zip ; clear
 ---# tmux select-layout even-horizontal
 --- tmux select-pane -t :.0
 --- tmux resizep -L 22
 --- tmux select-pane -t :.2
 --- tmux split-window -v
 --- tmux select-pane -t :.3
-unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ; export WALLET=c:\\users\\lcaldara\\Wallet_DK4NMBFXL9DKW0S7.zip; clear
+unset PROMPT_COMMAND ; export PS1='ebruser@alwaysfree $ ' ;  export WALLET=$HOME/Wallet_demoadb.zip ; clear
 --- tmux select-pane -t :.2
+. $HOME/.bash_profile
 cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
 ls v*
 python v1/insert_data.py
 --- tmux select-pane -t :.3
+. $HOME/.bash_profile
 cd ~/misc-labs/ebr-online/ebr-moviestream/insert_app
 python v1/insert_data.py
 --- tmux select-pane -t :.1
-sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@demoadb_tp
 lb update -changelog-file moviestream.002.v2.xml
 --- tmux select-pane -t :.0
 desc customer
@@ -85,8 +87,6 @@ select cus.first_name, cus.last_name,
 --- tmux select-pane -t :.3
 --- tmux send-keys -t :.3 C-c
 python v2/insert_data.py
---- tmux select-pane -t :.2
---- tmux send-keys -t :.2 C-c
 --- tmux select-pane -t :.0
 exit
 --- tmux select-pane -t :.1
@@ -95,13 +95,17 @@ begin
 end;
 /
 --- tmux select-pane -t :.2
+--- tmux send-keys -t :.2 C-c
 python v2/insert_data.py
 --- tmux select-pane -t :.0
-sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@demoadb_tp
 select sys_context('USERENV', 'SESSION_EDITION_NAME') from dual;
+---# --------------------------------------
+---# EBR DEMO STOPS HERE. NEXT IS DBMS_REDEFINITION
+---# --------------------------------------
 --- tmux select-pane -t :.1
 cat moviestream.003.v2_post_rollout/moviestream.0* | more
-sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@DK4NMBFXL9DKW0S7_tp
+sql -cloudconfig $WALLET moviestream/Welcome#Welcome#123@demoadb_tp
 lb update -changelog-file  moviestream.003.v2_post_rollout.xml
 --- tmux select-pane -t :.0
 desc customer$0
@@ -109,7 +113,7 @@ select object_name, object_type, edition_name
  from user_objects_ae where edition_name is not null 
   order by edition_name, object_type;
 ---# --------------------------------------
----# Stop the recording here!
+---# DBMS_REDEFINITION STOPS HERE
 ---# --------------------------------------
 --- tmux send-keys -t :.3 C-c
 --- tmux send-keys -t :.2 C-c

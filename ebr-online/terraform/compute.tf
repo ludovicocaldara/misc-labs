@@ -9,16 +9,11 @@ resource "oci_core_instance" "demo_vm" {
   shape               = var.vm_shape
   display_name        = var.compute_name
 
-  shape_config {
-    ocpus         = var.ocpus
-    memory_in_gbs = var.memory_in_gbs
+  source_details {
+    source_type = "image"
+    source_id   = var.image_ocid # Replace with the OCID of the image (e.g., Oracle Linux)
   }
 
-  source_details {
-    source_id               = data.oci_core_images.vm_images.images[0].id
-    source_type             = "image"
-    boot_volume_size_in_gbs = var.boot_volume_size_in_gbs
-  }
 
   create_vnic_details {
     assign_public_ip        = true

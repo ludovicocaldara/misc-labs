@@ -1,5 +1,8 @@
 variable "compartment_ocid" {
-  description = "The OCID of the compartment you want to work with."
+  description = "The OCID of the compartment you want to work with." 
+}
+variable "image_ocid" {
+  description = "The OCID of the image you want to use for compute. get images with oci compute image list --compartment-id" 
 }
 
 variable "vcn_cidr" {
@@ -13,8 +16,8 @@ variable "subnet_cidr" {
 }
 
 variable "vm_shape" {
-  description = "OCI Compute VM shape. Flex is the new default and it's pretty nice :-). Beware of your quotas, credits and limits if you plan to change it. Always Free: VM.Standard.A1.Flex"
-  default = "VM.Standard.A1.Flex"
+  description = "OCI Compute VM shape. Flex is the new default and it's pretty nice :-). Beware of your quotas, credits and limits if you plan to change it. Always Free: VM.Standard.E2.1.Micro"
+  default = "VM.Standard.E2.1.Micro"
 }
 
 variable "compute_name" {

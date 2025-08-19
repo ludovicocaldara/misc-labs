@@ -1,7 +1,7 @@
 resource "random_password" "adb_wallet_password" {
   length           = 10
   special          = false
-  number           = true
+  numeric           = true
   upper            = true
   lower            = true
   override_special = "_%@+!"
@@ -14,7 +14,7 @@ resource "random_password" "adb_wallet_password" {
 resource "random_password" "adb_password" {
   length           = 20
   special          = true
-  number           = true
+  numeric           = true
   upper            = true
   lower            = true
   override_special = "_%@+!"
