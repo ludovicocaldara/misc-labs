@@ -1,0 +1,63 @@
+mypdb_rw.adghol23.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=240)(RETRY_COUNT=150)(RETRY_DELAY=2)
+    (TRANSPORT_CONNECT_TIMEOUT=3)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol0-23.adghol23.misclabs.oraclevcn.com)(PORT=1521)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol1-23.adghol23.misclabs.oraclevcn.com)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME = mypdb_rw.adghol23.misclabs.oraclevcn.com)))
+
+bad_service.adghol23.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=10)(RETRY_COUNT=5)(RETRY_DELAY=1)
+    (TRANSPORT_CONNECT_TIMEOUT=1)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol0-23.adghol23.misclabs.oraclevcn.com)(PORT=1521)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol1-23.adghol23.misclabs.oraclevcn.com)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME = bad_service.adghol23.misclabs.oraclevcn.com)))
+
+bad_port.adghol23.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=10)(RETRY_COUNT=5)(RETRY_DELAY=1)
+    (TRANSPORT_CONNECT_TIMEOUT=1)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol0-23.adghol23.misclabs.oraclevcn.com)(PORT=1522)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol1-23.adghol23.misclabs.oraclevcn.com)(PORT=1522)))
+    (CONNECT_DATA=(SERVICE_NAME = bad_service.adghol23.misclabs.oraclevcn.com)))
+
+bad_ip.adghol23.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=10)(RETRY_COUNT=5)(RETRY_DELAY=1)
+    (TRANSPORT_CONNECT_TIMEOUT=1)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=192.167.1.10)(PORT=1522)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=192.167.1.11)(PORT=1522)))
+    (CONNECT_DATA=(SERVICE_NAME = bad_service.adghol23.misclabs.oraclevcn.com)))
+
+test.adghol23.misclabs.oraclevcn.com =
+  (DESCRIPTION =
+    (CONNECT_TIMEOUT=240)(RETRY_COUNT=150)(RETRY_DELAY=2)
+    (TRANSPORT_CONNECT_TIMEOUT=3)
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=192.167.1.10)(PORT=1522)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol0-23.adghol23.misclabs.oraclevcn.com)(PORT=1521)))
+    (ADDRESS_LIST =
+      (LOAD_BALANCE=on)
+      (ADDRESS=(PROTOCOL=TCP)(HOST=adghol1-23.adghol23.misclabs.oraclevcn.com)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME = mypdb_rw.adghol23.misclabs.oraclevcn.com)))
+
