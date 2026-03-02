@@ -1,13 +1,17 @@
 # Human Resources example with Edition-Based Redefinition
 
-## Requirements
-* The Autonomous Database created with the Terraform Stack in ../../terraform
-* The wallet of the Autonomous Database saved in this directory as `adb_wallet.zip`
-* A recent version of `SQLcl` (possibly >= 21.4)
+- Watch the presentation: [https://www.youtube.com/watch?v=wwqDn63q3cw](https://www.youtube.com/watch?v=wwqDn63q3cw)
+- Tri it on Oracle LiveLabs! [https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3557](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3557)
 
+## Requirements
+
+- Infrastructure provisioned by [`../../terraform-stacks/ebr-terraform`](../../terraform-stacks/ebr-terraform/README.md) (VCN, compute host, Always Free Autonomous Database)
+- The wallet of the Autonomous Database saved in this directory as `adb_wallet.zip`
+- A recent version of `SQLcl` (possibly >= 21.4)
 
 ## Install the base HR schema
-```
+
+```shell
 $ cd misc-labs/ebr-online/ebr-human-resources/initial_setup
 $ rlwrap sql /nolog
 
@@ -223,6 +227,7 @@ SQL>
 ```
 
 ## Some helper procedures to deal with editions
+
 In a production environment, the management of editions is usually a DBA task.
 
 Some operations like `CREATE EDITION`, `DROP EDITION`, `ALTER DATABASE DEFAULT EDITION`, etc., require elevated privileges that should not be granted to normal users.
@@ -230,7 +235,8 @@ For CI/CD testing, and therefore for production environments that rolled out wit
 Keep in mind, editions are shared among all schemas in the database, therefore all the schemas must belong to the same application and follow the same edition scheme. Different applications should be separated in different databases (or PDBs).
 
 The file `hr_main.sql` creates these procedure to let users manage and use editions themselves.
-```
+
+```sql
 REM ======================================================
 REM procedure to create editions as ADMIN (with AUTHID definer) and grant to invoker
 REM ======================================================
@@ -300,10 +306,12 @@ begin
 end;
 /
 ```
+
 In a normal situation, either a DBA or a single administrative user would take care of the editions, but in a development database, developers may want to maintain the editions themselves. The `CREATE ANY EDITION` privilege is also handy, but not effective when the users that create them are recreated as part of integration tests: an edition is an object at database (PDB) level, but the grants work like for normal objects (grants are lost if the grantor is deleted).
 
 The file `hr_main.sql` gives the extra grants to the `HR` user:
-```
+
+```sql
 grant execute on create_edition to hr;
 grant execute on drop_edition to hr;
 grant execute on default_edition to hr;
@@ -311,23 +319,28 @@ ALTER USER hr ENABLE EDITIONS;
 ```
 
 ## Base Tables and Editioning Views
+
 The set of scripts that install the `HR` schema is different from the default one.
 Also give a look at the file `hr_cre.sql`. Each table has a different name compared to the original `HR` schema (a suffix `$0` in this example):
-```
+
+```sql
 CREATE TABLE regions$0
     ( region_id      NUMBER
        CONSTRAINT  region_id_nn NOT NULL
     , region_name    VARCHAR2(25)
     );
 ```
+
 Each table has a corresponding *editioning view* that covers the table 1 to 1:
-```
+
+```sql
 CREATE EDITIONING VIEW regions as
     SELECT region_id, region_name FROM regions$0;
 ```
 
 The views, and all the depending objects, are editioned and belong to the `ORA$BASE` edition.
-```
+
+```sql
 SQL> select OBJECT_NAME, OBJECT_TYPE, EDITION_NAME from user_objects_ae WHERE edition_name is not null  order by 2,3;
 
           OBJECT_NAME    OBJECT_TYPE    EDITION_NAME
@@ -349,8 +362,10 @@ EMPLOYEES             VIEW           ORA$BASE
 ```
 
 ## Generate the base changelog for liquibase
+
 The command `lb genschema` creates the base Liquibase changelog. Run it from `../changes/hr.00000.base` directory:
-```
+
+```sql
 SQL> show user
 USER is "HR"
 SQL> cd ../changes/hr.00000.base
@@ -395,7 +410,8 @@ This initial changelog is useful if you plan to recreate the schema from scratch
 Notice that the `HR` schema creation is not included in the changelog.
 
 The Liquibase changelog is created as a set of xml files:
-```
+
+```shell
 SQL> exit
 $ cd ../changes/hr.00000.base
 $ ls -l
@@ -455,7 +471,8 @@ total 114
 ```
 
 The `controller.xml` is the changelog file that contains the changesets. You can see that the changesets are called from the current path:
-```
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -472,24 +489,30 @@ The `controller.xml` is the changelog file that contains the changesets. You can
 ```
 
 ## Create your own directory structure
+
 For the base and subsequent changelogs, you might want to use a neater directory organization, for example:
-```
+
+```text
 main.xml
 sub_changelog_1.xml
     -> sub_changelog_1/changesets*
   -> sub_changelog_2.xml
     -> sub_changelog_2/changesets*
 ```
+
 Having each changelog contained in a separate directory facilitates the development when schemas start getting bigger and the number of changesets important.
 
 For this reason, you can convert the file `hr.00000.base/controller.xml` to `hr.00000.base.xml`. This part is subjective. Different development teams may prefer different directory layouts.
 
 The conversion can be achieved with:
-```
+
+```shell
 sed -e "s/file=\"/file=\"hr.00000.base\//" hr.00000.base/controller.xml > hr.00000.base.xml
 ```
+
 so that the `<include>` in the new file look like (notice the new path):
-```
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -507,7 +530,8 @@ so that the `<include>` in the new file look like (notice the new path):
 ```
 
 The file `main.xml` includes all the changelogs, so in a single update, ALL the modifications from the initial version to the last changelog will be checked and eventually applied.
-```
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -525,7 +549,8 @@ The file `main.xml` includes all the changelogs, so in a single update, ALL the 
 In the example, there are already two placeholders for the next schema/code releases.
 
 At this point we can run `lb update` to synchronize the definition with the `Liquibase` metadata (optional):
-```
+
+```shell
 SQL> cd ..
 SQL> lb status -changelog main.xml
 
@@ -549,7 +574,8 @@ ScriptRunner Executing: hr.00000.base/departments$0_table.xml::8fccd55150e9ae053
 ```
 
 The next `lb status` shows everything up to date. A subsequent `lb update` will not change anything.
-```
+
+```shell
 SQL> lb status -changelog main.xml
 
 HR@jdbc:oracle:thin:@(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-zurich-1.oraclecloud.com))(connect_data=(service_name=ht8k3jwmatw52we_demoadb_medium.adb.oraclecloud.com))(security=(ssl_server_cert_dn="CN=adb.eu-zurich-1.oraclecloud.com, OU=Oracle ADB ZURICH, O=Oracle Corporation, L=Redwood City, ST=California, C=US"))) is up to date
@@ -562,12 +588,13 @@ Errors encountered:0
 ######## END ERROR SUMMARY ##################
 ```
 
-
 ## Prepare the scripts to create a new edition and split `employees.phone_number` to `country_code` and `phone#`
+
 As an example of schema change, let's split a column to two columns.
 
 To achieve this goal, there are a few steps to do. To let `Liquibase` retry them (idempotency), we need separated files:
-```
+
+```text
 hr.000001.edition_v2.sql
 hr.000002.alter_session.sql
 hr.000003.employee_add_columns.sql
@@ -579,28 +606,33 @@ hr.000008.employee_reverse_trigger.sql
 hr.000009.employee_enable_reverse_trigger.sql
 hr.000010.view_employees.sql
 ```
+
 ### 1. Create the new edition
 
 For this, we will use the helper function created earlier:
-```
+
+```sql
 begin
     admin.create_edition('V2');
 end;
 /
 ```
+
 This runs the `CREATE EDITION V2` and `GRANT USE ON EDITION V2 to HR`.
 
 Remember, for real-world scenarios, it would be best to have separate PDBs per deveoloper so that there are no conflicts in the management of editions.
 
 ### 2. Use the new edition
+
 The second one is also important, as it sets the edition for the subsequent changesets:
-```
+
+```sql
 ALTER SESSION SET EDITION=V2;
 ```
 
 The second changesets must always run in the changelog to ensure that the correct edition is set (in case after an error liquibase disconnects and reconnects again to the previous edition), so we will call it with the parameter `runAlways=true`:
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -616,11 +648,14 @@ The second changesets must always run in the changelog to ensure that the correc
     [...]
 </databaseChangeLog>
 ```
+
 The other changesets have a different `splitStatements` parameter depending on their nature (SQL or PL/SQL).
 
 ### 3. Add the new columns
+
 This operation is online for subsequent DMLs but must wait on the existing ones. We specify a DDL timeout:
-```
+
+```sql
 alter session set DDL_LOCK_TIMEOUT=30;
 
 alter table employees$0 add (
@@ -630,12 +665,13 @@ alter table employees$0 add (
 ```
 
 ### 4. Create the forward cross-edition trigger
+
 Two triggers make sure that changes done in the old and new editions populate the columns correctly.
 
 The `forward crossedition` trigger propagates the changes from the old edition to the new columns.
 There will be a reverse one that will do the same for DMLs on the new edition.
 
-```
+```sql
 create or replace trigger employees_fwdxedition_trg
   before insert or update of phone_number on employees$0
   for each row
@@ -669,8 +705,10 @@ alter trigger employees_fwdxedition_trg enable;
 ```
 
 ### 5. Populate the new columns
+
 Before populating the new columns, we wait for the current DMLs to finish:
-```
+
+```sql
 DECLARE
   scn number := null;
   -- A null or negative value for Timeout will cause a very long wait.
@@ -692,7 +730,8 @@ end;
 ```
 
 The population happens by applying the trigger on the rows of the table, using a special `dbms_sql.parse` call:
-```
+
+```sql
 declare
   cur integer := sys.dbms_sql.open_cursor(security_level => 2);
   no_of_updated_rows integer not null := -1;
@@ -711,9 +750,10 @@ end;
 ```
 
 ### 6. Create the reverse trigger
+
 Before using the new edition, we create the reverse trigger so that new DMLs on the new columns will update the old column for the applications still running in the old edition:
 
-```
+```sql
 create or replace trigger employees_revxedition_trg
   before insert or update of country_code,phone# on employees$0
   for each row
@@ -740,15 +780,19 @@ alter trigger employees_revxedition_trg enable;
 ```
 
 ### 7. Create the new version of the editioning view
+
 The editioning view is "the surrogate" of the base table. In the new edition, we want to have `country_code` and `phone#` columns, and we omit `phone_number`. Note that we can also choose the order of the column in the definition.
-```
+
+```sql
 CREATE OR REPLACE EDITIONING VIEW employees AS
     SELECT employee_id, first_name, last_name, email, country_code, phone#, hire_date, job_id, salary, commission_pct, manager_id, department_id FROM employees$0;
 ```
 
 ### 8. Actualize the objects
+
 Now that the modifications to the existing objects have been made, we can "transfer" all the inherited objects from the previous version to the new one, and at the same time validate/recompile them (nobody is using them yet).
-```
+
+```sql
 declare
      type obj_t is record(
          object_name user_objects.object_name%type,
@@ -783,8 +827,10 @@ declare
 ```
 
 ## Run `lb update` for the new changelog
+
 Be sure to cd to the right directory:
-```
+
+```shell
 SQL> exit
 $ cd ../changes
 $ rlwrap sql /nolog
@@ -857,8 +903,10 @@ Errors encountered:0
 ```
 
 ## Enjoy the two editions
+
 At this point we have one edition using the old column:
-```
+
+```sql
 SQL> alter session set edition=v0;
 
 Session altered.
@@ -872,8 +920,10 @@ ______________ _____________ ____________ ___________ _____________________ ____
            161 Sarath        Sewall       SSEWALL     011.44.1345.529268    03-NOV-06    SA_REP         7000              0.25           146               80
            166 Sundar        Ande         SANDE       011.44.1346.629268    24-MAR-08    SA_REP         6400               0.1           147               80
 ```
+
 and the new one with the other two columns:
-```
+
+```sql
 SQL> alter session set edition=v2;
 
 Session altered.
@@ -889,7 +939,8 @@ ______________ _____________ ____________ ___________ _______________ __________
 ```
 
 The base table itself contains all of them, but should not be used directly.
-```
+
+```sql
 SQL> select * from employees$0 where rownum<5;
 
    EMPLOYEE_ID    FIRST_NAME    LAST_NAME       EMAIL          PHONE_NUMBER    HIRE_DATE    JOB_ID    SALARY    COMMISSION_PCT    MANAGER_ID    DEPARTMENT_ID    COUNTRY_CODE         PHONE#
@@ -901,7 +952,8 @@ ______________ _____________ ____________ ___________ _____________________ ____
 ```
 
 We can check the objects for all the editions. We see a copy for each one because we forced their actualization. Without that step, in V2 we would see only the objects that have been changed, and the others would have been inherited from V0.
-```
+
+```sql
 SQL> select OBJECT_NAME, OBJECT_TYPE, STATUS, EDITION_NAME from user_objects_ae WHERE edition_name is not null  order by 2,1,4;
 
                      OBJECT_NAME    OBJECT_TYPE    STATUS    EDITION_NAME
@@ -938,27 +990,33 @@ REGIONS                          VIEW           VALID     V2
 28 rows selected.
 ```
 
-
 ## Switch to the new edition
+
 Now selected application containers can connect to the new edition using either a dedicated service or by issuing an `alter session` (either explicit or in the connection string).
 Once the application is validated, all the new sessions can switch to the new edition by changing the database default:
-```
+
+```sql
 ALTER DATABASE DEFAULT EDITION=V2;
 ```
+
 As `HR` user, we achieve that using the helper procedure previously created:
-```
+
+```sql
 begin
   admin.default_edition('V2');
 end;
 /
 ```
+
 However, all the applications that are sensible to the change should explicitly set the edition so that reconnections will not cause any harm.
 
 For this demo, we will integrate this step in a changelog that decommission the old edition.
 
 ## Decommission the old edition and redefine the table (optional)
+
 The last changelog contains the SQL files that cleanup everything, drop the old edition and redefine the table without the `phone_number` column.
-```
+
+```text
 hr.000001.alter_session.sql
 hr.000002.change_default_edition.sql
 hr.000003.drop_old_edition.sql
@@ -971,15 +1029,18 @@ hr.000013.drop_interim_table.sql
 ```
 
 ### 1. Alter the session to use the new edition
+
 For a new connection, the edition is still the default. Use the new one!
-```
+
+```sql
 ALTER SESSION SET EDITION=V2;
 ```
 
 ### 2. Change the default edition
 
 For this step, we use again a helper procedure that we have defined previously, and that runs with DBA privileges.
-```
+
+```sql
 begin
   admin.default_edition('V2');
 end;
@@ -988,10 +1049,11 @@ end;
 
 Internally, the procedure just runs `execute immediate 'alter database default edition ='||edition_name;`
 
-
 ### 3. Drop the old edition
+
 Here we use a helper procedure again:
-```
+
+```sql
 declare
   l_parent_edition dba_editions.edition_name%type;
 begin
@@ -1001,12 +1063,14 @@ begin
 end;
 /
 ```
+
 The user has a `grant select on dba_editions`. The `drop_edition` procedure will execute internally a `execute immediate 'DROP EDITION '||edition_name||' CASCADE`, then a `dbms_editions_utilities.clean_unusable_editions`.
 
 ### 4. Drop the cross-edition triggers
+
 Keeping the cross-edition triggers when the previous edition is no longer in use will just add overhead to the table DMLs.
 
-```
+```sql
 alter trigger EMPLOYEES_REVXEDITION_TRG disable;
 
 drop trigger EMPLOYEES_REVXEDITION_TRG;
@@ -1016,9 +1080,9 @@ alter trigger EMPLOYEES_FWDXEDITION_TRG disable;
 drop trigger EMPLOYEES_FWDXEDITION_TRG;
 ```
 
-
 ### 5. Redefine the Table: Create the interim table
-```
+
+```sql
 create table employees$interim
     ( employee_id    NUMBER(6)
     , first_name     VARCHAR2(20)
@@ -1033,10 +1097,11 @@ create table employees$interim
     , manager_id     NUMBER(6)
     , department_id  NUMBER(4)
     ) ;
+```
 
-```
 ### 6. Redefine the Table: Start the redefinition
-```
+
+```sql
 declare
   l_colmap varchar(512);
 begin
@@ -1063,8 +1128,10 @@ begin
 end;
 /
 ```
+
 ### 7. Redefine the Table: Copy the table dependents
-```
+
+```sql
 declare
   nerrors number;
 begin
@@ -1080,7 +1147,8 @@ end;
 ```
 
 ### 8. Redefine the Table: Finish the redefinition
-```
+
+```sql
 begin
   dbms_redefinition.finish_redef_table ( user, 'EMPLOYEES$0', 'EMPLOYEES$INTERIM');
   dbms_utility.compile_schema(schema => user, compile_all => FALSE);
@@ -1089,15 +1157,19 @@ end;
 ```
 
 ### 9. Redefine the table: Drop the interim table
-```
+
+```sql
 drop table employees$interim cascade constraints;
 ```
+
 The cascade constraints is necessary for the self-referencing foreign key (employee->manager).
 
 
 ### Run the changelog with liquibase
+
 The changelog file will look similar to this:
-```
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -1153,7 +1225,8 @@ The changelog file will look similar to this:
 ```
 
 Let's run it:
-```
+
+```shell
 $ rlwrap sql /nolog
 
 SQLcl: Release 21.4 Production on Mon Mar 14 15:18:04 2022

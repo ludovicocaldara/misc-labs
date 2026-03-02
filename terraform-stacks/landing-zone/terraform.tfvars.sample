@@ -1,0 +1,27 @@
+tenancy_ocid  = "ocid1.tenancy.oc1..<unique_ID>"
+user_ocid     = "ocid1.user.oc1..<unique_ID>"
+fingerprint   = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+private_key_path = "~/.oci/oci_api_key.pem"
+region        = "eu-frankfurt-1"
+
+compartment_ocid = "ocid1.compartment.oc1..<unique_ID>"
+
+# Optional customizations
+name_prefix   = "lab-lz"
+vcn_cidr      = "10.50.0.0/16"
+bastion_subnet_cidr = "10.50.1.0/24"
+
+enable_nat_gateway     = true
+enable_service_gateway = true
+
+client_cidr_block_allow_list = [
+  "203.0.113.0/24",
+]
+
+defined_tags = {
+  # "Operations.CostCenter" = "1234"
+}
+
+freeform_tags = {
+  environment = "dev"
+}
