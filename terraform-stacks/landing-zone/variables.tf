@@ -11,7 +11,10 @@ variable "name_prefix" {
    default = "lab-lz"
 }
 
-variable "vcn_cidr" { type = string default = "10.50.0.0/16" }
+variable "vcn_cidr" {
+  type = string
+  default = "10.50.0.0/16"
+}
 
 variable "bastion_subnet_cidr" {
   type    = string
