@@ -84,7 +84,8 @@ resource "oci_bastion_bastion" "bastion" {
   compartment_id                 = var.compartment_ocid
   target_subnet_id               = oci_core_subnet.bastion_endpoint_subnet.id
   name                           = "${var.name_prefix}-bastion"
-  client_cidr_block_allow_list   = var.client_cidr_block_allow_list
+  client_cidr_block_allow_list   = split(",", var.client_cidr_block_allow_list)
+  max_session_ttl_in_seconds   = var.max_session_ttl_in_seconds
 
   defined_tags  = var.defined_tags
   freeform_tags = local.tags_freeform

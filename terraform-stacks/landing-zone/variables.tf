@@ -29,8 +29,13 @@ variable "enable_service_gateway" {
 }
 
 variable "client_cidr_block_allow_list" {
-  type        = list(string)
-  description = "Public egress CIDRs allowed to initiate Bastion sessions (e.g., corporate VPN/NAT)."
+  type        = string
+  description = "Comma-separated public egress CIDRs allowed to initiate Bastion sessions (e.g., corporate VPN/NAT)."
+  default = "0.0.0.0/0"
+}
+
+variable "max_session_ttl_in_seconds" {
+  default = 7200
 }
 
 variable "defined_tags"  {
