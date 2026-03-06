@@ -7,31 +7,31 @@ variable "compartment_ocid" {
   description = "OCID of the compartment where the lab resources are created."
 }
 
+variable "landing_zone_name" {
+  type        = string
+  description = "Name of the landing zone (used to reference baseline resources)."
+  default = "lab-lz"
+}
+
 variable "region" {
   type        = string
   description = "OCI region where resources will be provisioned."
 }
 
-variable "landing_zone_state_path" {
-  type        = string
-  default     = null
-  description = "Optional override for the landing-zone Terraform state path. Defaults to ../landing-zone/terraform.tfstate."
+variable "tenancy_ocid" { type = string }
+
+variable "lab_number" {
+  type        = number
+  description = "Number of the lab (used calculate the subnet CIDR (e.g. 10.50.lab_number.0/24) and eventually to create unique resource names)."
 }
 
-# ----------------------------------
-# Networking
-# ----------------------------------
-
-variable "db_subnet_cidr" {
-  type        = string
-  default     = "10.50.20.0/24"
-  description = "CIDR block for the private database subnet (must fall within the landing-zone VCN)."
+variable "defined_tags"  {
+  type = map(string)
+  default = {}
 }
-
-variable "db_subnet_dns_label" {
-  type        = string
-  default     = "dbsubnet"
-  description = "DNS label for the database subnet. Must be unique within the landing-zone VCN and start with a letter."
+variable "freeform_tags" {
+  type = map(string)
+  default = {}
 }
 
 # ----------------------------------
@@ -94,7 +94,7 @@ variable "db_shape" {
 
 variable "db_version" {
   type        = string
-  default     = "23.8.0.25.04"
+  default     = "23.26.1.0.0"
   description = "Database software version. This lab targets 23ai."
 }
 
@@ -125,4 +125,8 @@ variable "db_admin_password" {
   type        = string
   sensitive   = true
   description = "Password for the SYS/SYSTEM accounts. Provide via tfvars or environment variable."
+}
+
+locals {
+  tags_freeform = merge({ "stack" = var.lab_name }, var.freeform_tags)
 }

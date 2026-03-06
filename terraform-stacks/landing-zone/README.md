@@ -46,3 +46,11 @@ ssh -i ~/.ssh/oci_lab_key -L 8000:<app_private_ip>:8000 opc@<bastion_public_ip>
 ```
 
 After running the SSH command, point your local tooling (SQL*Plus, SQL Developer, browsers, curl, etc.) to `localhost:<forwarded_port>` and traffic will traverse the bastion into the private subnet.
+
+
+
+oci bastion bastion list -c  $COMPID     
+oci compute compute-host list -c $COMPID
+oci db database list -c $COMPID    
+oci db node list -c $COMPID --db-system-id <get dynamically from oci db database list>
+oci network vnic get --vnic-id <get dynamically from oci db node list>

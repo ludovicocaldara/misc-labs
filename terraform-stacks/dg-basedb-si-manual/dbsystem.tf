@@ -1,4 +1,4 @@
-resource "oci_database_db_system" "adg_db_system" {
+resource "oci_database_db_system" "db_system" {
   count                   = var.members
   availability_domain     = data.oci_identity_availability_domain.ad.name
   compartment_id          = var.compartment_ocid
@@ -16,7 +16,7 @@ resource "oci_database_db_system" "adg_db_system" {
   source                  = "NONE"
 
   db_home {
-    display_name = "${var.lab_name}${count.index}-23aiHome"
+    display_name = "${var.lab_name}${count.index}-Home"
     db_version   = var.db_version
 
     database {
@@ -31,7 +31,7 @@ resource "oci_database_db_system" "adg_db_system" {
     storage_management = var.storage_management
   }
 
-  nsg_ids = [data.oci_core_network_security_groups.misc_labs_nsg.network_security_groups[0].id]
+  nsg_ids = [ oci_core_network_security_group.lab_nsg.id ]
 
   lifecycle {
     ignore_changes = [display_name, hostname]

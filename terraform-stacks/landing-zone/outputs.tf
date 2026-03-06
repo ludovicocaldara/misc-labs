@@ -9,3 +9,8 @@ output "bastion_id" { value = oci_bastion_bastion.bastion.id }
 
 output "bastion_endpoint_subnet_id" { value = oci_core_subnet.bastion_endpoint_subnet.id }
 output "bastion_endpoint_subnet_cidr" { value = var.bastion_subnet_cidr }
+
+output "nat_gateway_id" {
+  description = "OCID of the NAT gateway created by the landing-zone stack (null if disabled)."
+  value       = var.enable_nat_gateway ? oci_core_nat_gateway.nat[0].id : null
+}
