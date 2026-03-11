@@ -1,0 +1,177 @@
+title: "ExaDB-XS End-to-End (VM Clusters in PUBLIC Subnet)"
+schemaVersion: 1.1.0
+version: "1.0.1"
+locale: "en"
+
+variableGroups:
+  - title: "Required"
+    variables:
+      - compartment_ocid
+      - availability_domain
+      - grid_image_id
+      - db_admin_password
+  - title: "Region"
+    variables:
+      - region
+  - title: "Networking"
+    variables:
+      - vcn_cidr
+      - backup_subnet_cidr
+      - public_subnet_cidr
+  - title: "Vault Capacity"
+    variables:
+      - vault_highcap_size_gb
+  - title: "Cluster Settings"
+    variables:
+      - ssh_public_key
+      - enabled_ecpu_per_node
+      - total_ecpu_per_node
+      - vmfs_size_gb_per_node
+  - title: "Database Settings"
+    variables:
+      - db_version
+      - db_name
+      - pdb_name
+  - title: "Data Guard"
+    variables:
+      - enable_active_data_guard
+      - dg_display_name
+  - title: "Timing / Backoff"
+    variables:
+      - post_cluster_wait_seconds
+      - between_dbhomes_wait_seconds
+      - pre_database_wait_seconds
+
+variables:
+  region:
+    type: string
+    title: "Region"
+    description: "OCI region"
+    default: "us-phoenix-1"
+    required: true
+
+  compartment_ocid:
+    type: string
+    title: "Compartment OCID"
+    description: "Target compartment for all resources"
+    required: true
+
+  availability_domain:
+    type: string
+    title: "Availability Domain"
+    description: "Use your tenancy Availability Domain Eg:AAef:PHX-AD-1"
+    required: true
+
+  grid_image_id:
+    type: string
+    title: "Grid Image OCID (DB Patch OCID)"
+    description: "Grid Infrastructure image OCID for ExaDB-XS (ocid1.dbpatch...)"
+    required: true
+
+  db_admin_password:
+    type: string
+    title: "DB Admin Password"
+    description: ">=12 chars with upper/lower/digit/special"
+    sensitive: true
+    required: true
+
+  vcn_cidr:
+    type: string
+    title: "VCN CIDR"
+    default: "10.40.0.0/16"
+    required: false
+
+  backup_subnet_cidr:
+    type: string
+    title: "Backup Subnet CIDR (private)"
+    default: "10.40.2.0/24"
+    required: false
+
+  public_subnet_cidr:
+    type: string
+    title: "Public Subnet CIDR (used by both VM Clusters)"
+    default: "10.40.10.0/24"
+    required: false
+
+  vault_highcap_size_gb:
+    type: number
+    title: "Vault High Capacity Size (GiB)"
+    default: 500
+    required: false
+
+  ssh_public_key:
+    type: string
+    title: "SSH Public Key"
+    description: "OpenSSH public key for cluster nodes (required)"
+    required: true
+
+  enabled_ecpu_per_node:
+    type: number
+    title: "Enabled ECPUs per node"
+    default: 8
+    required: false
+
+  total_ecpu_per_node:
+    type: number
+    title: "Total ECPUs per node (cap)"
+    default: 8
+    required: false
+
+  vmfs_size_gb_per_node:
+    type: number
+    title: "VM FS size per node (GiB)"
+    default: 250
+    required: false
+
+  db_version:
+    type: string
+    title: "Database Version"
+    description: "e.g., 23.26.0.0.0"
+    default: "23.26.0.0.0"
+    required: false
+
+  db_name:
+    type: string
+    title: "CDB Name"
+    default: "adgvec"
+    required: false
+
+  pdb_name:
+    type: string
+    title: "PDB Name"
+    default: "mypdb"
+    required: false
+
+  enable_active_data_guard:
+    type: boolean
+    title: "Enable Active Data Guard"
+    description: "Enable read-only standby"
+    default: true
+    required: false
+
+  dg_display_name:
+    type: string
+    title: "Data Guard Display Name"
+    default: "dg-assoc-a-to-b"
+    required: false
+
+  post_cluster_wait_seconds:
+    type: number
+    title: "Wait after Clusters (seconds)"
+    description: "Buffer before DB Homes (set 900-1800 if clusters just finished)"
+    default: 900
+    required: false
+
+  between_dbhomes_wait_seconds:
+    type: number
+    title: "Gap between DB Homes (seconds)"
+    description: "Buffer between DB Home A and B"
+    default: 300
+    required: false
+
+  pre_database_wait_seconds:
+    type: number
+    title: "Pre-Database Wait (seconds)"
+    description: "Buffer before creating the DB"
+    default: 120
+    required: false
