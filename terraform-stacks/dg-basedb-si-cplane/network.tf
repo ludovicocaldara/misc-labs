@@ -1,61 +1,66 @@
-data "oci_core_vcns" "misc_labs_vcn" {
-  display_name   = "misc_labs_vcn"
+
+
+resource "oci_core_route_table" "db_private" {
   compartment_id = var.compartment_ocid
-}
-
-data "oci_core_route_tables" "misc_labs_rt" {
-  display_name   = "misc_labs_rt"
-  compartment_id = var.compartment_ocid
-}
-
-
-data "oci_core_nat_gateways" "misc_labs_nat_gateway" {
-  display_name   = "misc_labs_nat_gateway"
-  compartment_id = var.compartment_ocid
-}
-
-
-data "oci_core_security_lists" "misc_labs_securitylist" {
-  display_name   = "misc_labs_securitylist"
-  compartment_id = var.compartment_ocid
-}
-
-
-resource "oci_core_route_table" "misc_labs_priv_rt" {
-  display_name   = "misc_labs_priv_rt_${var.lab_name}"
-
-  compartment_id = var.compartment_ocid
-  vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
+  vcn_id         = data.oci_core_vcns.landing_zone_vcn.virtual_networks[0].id
+  display_name   = "${var.lab_name}-rt"
 
   route_rules {
     destination       = "0.0.0.0/0"
     destination_type  = "CIDR_BLOCK"
-    network_entity_id = data.oci_core_nat_gateways.misc_labs_nat_gateway.nat_gateways[0].id
+    network_entity_id = data.oci_core_nat_gateways.landing_zone_nat_gateway.nat_gateways[0].id
+  }
+
+  defined_tags = var.defined_tags
+  freeform_tags = var.freeform_tags
+}
+
+resource "oci_core_subnet" "lab_subnet" {
+  compartment_id             = var.compartment_ocid
+  vcn_id                     = data.oci_core_vcns.landing_zone_vcn.virtual_networks[0].id
+  cidr_block                 = cidrsubnet(data.oci_core_vcns.landing_zone_vcn.virtual_networks[0].cidr_block, 8, var.lab_number)
+  display_name               = "${var.lab_name}-subnet"
+  dns_label                  = var.lab_name
+  prohibit_public_ip_on_vnic = true
+  route_table_id = data.oci_core_route_tables.landing_zone_private_route_table.route_tables[0].id
+
+  defined_tags  = var.defined_tags
+  freeform_tags = var.freeform_tags
+}
+
+
+resource "oci_core_network_security_group" "lab_nsg" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = data.oci_core_vcns.landing_zone_vcn.virtual_networks[0].id
+  display_name   = "${var.lab_name}-nsg"
+  defined_tags   = var.defined_tags
+  freeform_tags  = var.freeform_tags
+}
+
+variable "bastion_allowed_tcp_ports" {
+  type = map(object({ min = number, max = number }))
+  default = {
+    ssh   = { min = 22,   max = 22 }
+    db    = { min = 1521, max = 1521 }
   }
 }
 
 
-# ---------------------------------------------
-# Setup the subnet
-# ---------------------------------------------
-resource "oci_core_subnet" "db_subnet" {
-  display_name      = "db_subnet_${var.lab_name}"
-  dns_label         = "db${var.lab_name}"
+resource "oci_core_network_security_group_security_rule" "ingress_from_bastion" {
+  for_each = var.bastion_allowed_tcp_ports
 
-  compartment_id    = var.compartment_ocid
-  vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
-  cidr_block        = var.db_subnet_cidr
-  route_table_id    = oci_core_route_table.misc_labs_priv_rt.id
-  security_list_ids = [data.oci_core_security_lists.misc_labs_securitylist.security_lists[0].id]
-}
+  network_security_group_id = oci_core_network_security_group.lab_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = data.oci_core_subnets.bastion_endpoint_subnet.subnets[0].cidr_block
+  source_type               = "CIDR_BLOCK"
 
-resource "oci_core_subnet" "app_subnet" {
-  display_name      = "app_subnet_${var.lab_name}"
-  dns_label         = "app${var.lab_name}"
+  tcp_options {
+    destination_port_range {
+      min = each.value.min
+      max = each.value.max
+    }
+  }
 
-  compartment_id    = var.compartment_ocid
-  vcn_id            = data.oci_core_vcns.misc_labs_vcn.virtual_networks[0].id
-  cidr_block        = var.app_subnet_cidr
-  route_table_id    = oci_core_route_table.misc_labs_priv_rt.id
-  security_list_ids = [data.oci_core_security_lists.misc_labs_securitylist.security_lists[0].id]
+  description = "Allow traffic from bastion endpoint subnet to lab targets on port ${each.value.min}-${each.value.max}"
 }

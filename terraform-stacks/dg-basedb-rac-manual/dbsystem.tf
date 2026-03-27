@@ -7,8 +7,8 @@ resource "oci_database_db_system" "db_system" {
   subnet_id               = oci_core_subnet.lab_subnet.id
   shape                   = var.db_shape
   ssh_public_keys         = [var.ssh_public_key]
-  hostname                = "${var.lab_name}${count.index}"
-  display_name            = "${var.lab_name}${count.index}"
+  hostname                = "${var.lab_name}${count.index + 1}"
+  display_name            = "${var.lab_name}${count.index + 1}"
   license_model           = var.license_model
   node_count              = var.node_count # For RAC, typically 2
   cpu_core_count          = var.cpu_core_count
@@ -18,7 +18,7 @@ resource "oci_database_db_system" "db_system" {
   source                  = "NONE"
 
   db_home {
-    display_name = "${var.lab_name}${count.index}-Home"
+    display_name = "${var.lab_name}${count.index + 1}-Home"
     db_version   = var.db_version
 
     database {

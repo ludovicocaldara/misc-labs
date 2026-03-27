@@ -1,124 +1,126 @@
 # ----------------------------------
-# Tenancy information
+# Tenancy and landing zone inputs
 # ----------------------------------
+
 variable "compartment_ocid" {
-  description = "Your compartment OCID, eg: \"ocid1.compartment.oc1..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\""
+  type        = string
+  description = "OCID of the compartment where the lab resources are created."
 }
-variable "tenancy_ocid" {
-  description = "Your tenancy OCID, eg: \"ocid1.tenancy.oc1..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\""
+
+variable "landing_zone_name" {
+  type        = string
+  description = "Name of the landing zone (used to reference baseline resources)."
+  default = "lab-lz"
 }
+
 variable "region" {
-  description = "Your region, eg: \"uk-london-1\""
+  type        = string
+  description = "OCI region where resources will be provisioned."
 }
 
+variable "tenancy_ocid" { type = string }
 
-variable "db_subnet_cidr" {
-  description = "CIDR block for the subnet."
-  default = "10.0.1.0/24"
+variable "lab_number" {
+  type        = number
+  description = "Number of the lab (used calculate the subnet CIDR (e.g. 10.50.lab_number.0/24) and eventually to create unique resource names)."
 }
 
-variable "app_subnet_cidr" {
-  description = "CIDR block for the subnet."
-  default = "10.0.2.0/24"
+variable "defined_tags"  {
+  type = map(string)
+  default = {}
+}
+variable "freeform_tags" {
+  type = map(string)
+  default = {}
 }
 
-variable "user_ocid" {
-}
-
-variable "ssh_public_key" {
-}
-
-variable "fingerprint" {
-}
-
-variable "private_key_path" {
-}
-
-
-locals {
-  ssh_private_key = ""
-}
+# ----------------------------------
+# Database system configuration
+# ----------------------------------
 
 variable "lab_name" {
+  type        = string
+  default     = "adghol"
+  description = "Short name used to prefix resource names."
 }
 
-# ----------------------------------------------------
-# decent defaults:
-# ----------------------------------------------------
-variable "db_system_shape" {
-  description = "DB system shape to use for the DB server."
-  default = "VM.Standard2.2"
+variable "pdb_name" {
+  type        = string
+  default     = "mypdb"
+  description = "Name of the PDB created inside each DB system."
 }
 
-variable "vm_user" {
-  description = "SSH user to connect to the server for the setup. Must have sudo privilege."
-  default = "opc"
+variable "ad_number" {
+  type        = number
+  default     = 1
+  description = "Availability domain number where the DB systems will be created."
 }
 
 variable "node_count" {
-  description = "Number of nodes in the Grid Infrastructure cluster. Use 1 for test and dev."
-  default = "1"
+  type        = number
+  default     = 1
+  description = "Nodes per DB system. Keep to 1 for single-instance systems."
 }
 
-variable "db_edition" {
-  description = "Database edition. Must be EE-EP to use RAC, not mandatory for the server if 1 node setup."
-  default = "ENTERPRISE_EDITION_EXTREME_PERFORMANCE"
-}
-
-# ----------------------------------------------------------
-# we don't really care about the database being created,
-# because we will use the system as server, not as DB server.
-# But there are no ways to skip the database creation, so we'll just keep it.
-#
-# Note:
-# there is no full layer 2 support in the OCI network.
-# A full GI setup requires it (GI needs multicast), that's why we use DBCS and not a compute instance.
-# ----------------------------------------------------------
-
-variable "db_admin_password" {
-  description = "Default sys/system password for the DB System database."
-}
-
-variable "n_character_set" {
-  default = "AL16UTF16"
-}
-
-variable "character_set" {
-  default = "AL32UTF8"
-}
-
-variable "db_workload" {
-  default = "OLTP"
-}
-
-variable "db_disk_redundancy" {
-  description = "ASM disk redundancy. Use HIGH for production, NORMAL otherwise."
-  default = "NORMAL"
-}
-
-variable "db_version" {
-  description = "Version for the DB system. This lab supports 19c, don't use 21c yet."
-  default = "19.0.0.0"
+variable "cpu_core_count" {
+  type        = number
+  default     = 2
+  description = "CPU cores per DB system node."
 }
 
 variable "data_storage_size_in_gb" {
-  description = "ASM space in GB. 256 is a good default to host also the Server storage."
-  default = "256"
+  type        = number
+  default     = 256
+  description = "Total data storage (in GB) available to the DB system."
+}
+
+variable "data_storage_percentage" {
+  type        = number
+  default     = 80
+  description = "Percentage of total storage allocated to data disks."
+}
+
+variable "db_shape" {
+  type        = string
+  default     = "VM.Standard.E4.Flex"
+  description = "Compute shape for the DB systems."
+}
+
+variable "db_version" {
+  type        = string
+  default     = "23.26.1.0.0"
+  description = "Database software version. This lab targets 23ai."
+}
+
+variable "db_edition" {
+  type        = string
+  default     = "ENTERPRISE_EDITION_EXTREME_PERFORMANCE"
+  description = "Database edition for the DB system."
+}
+
+variable "storage_management" {
+  type        = string
+  default     = "LVM"
+  description = "Storage management option (LVM or ASM)."
 }
 
 variable "license_model" {
-  default = "BRING_YOUR_OWN_LICENSE"
+  type        = string
+  default     = "BRING_YOUR_OWN_LICENSE"
+  description = "License model for the DB system."
 }
 
+variable "ssh_public_key" {
+  type        = string
+  description = "SSH public key injected into the DB systems."
+}
+
+variable "db_admin_password" {
+  type        = string
+  sensitive   = true
+  description = "Password for the SYS/SYSTEM accounts. Provide via tfvars or environment variable."
+}
 
 locals {
-  timestamp_full = timestamp()
-  timestamp = replace(local.timestamp_full, "/[- TZ:]/", "")
+  tags_freeform = merge({ "stack" = var.lab_name }, var.freeform_tags)
 }
-
-locals {
-  repo_script      = "/tmp/01_repo_setup.sh"
-  dhclient_script  = "/tmp/dhclient.sh"
-  dhclient_setup   = file("${path.root}/scripts/set-domain.sh")
-}
-

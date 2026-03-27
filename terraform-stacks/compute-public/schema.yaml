@@ -1,0 +1,116 @@
+title: "Compute Public Stack (Landing Zone Subnet Reuse)"
+schemaVersion: "1.1.0"
+version: "1.0.0"
+locale: "en"
+
+variableGroups:
+  - title: "Core OCI Configuration"
+    variables:
+      - tenancy_ocid
+      - region
+      - compartment_ocid
+      - landing_zone_name
+      - defined_tags
+      - freeform_tags
+  - title: "Compute Topology"
+    variables:
+      - lab_name
+      - landing_zone_subnet_name
+      - num_compute
+      - ad_number
+      - compute_shape
+      - shape_ocpus
+      - shape_memory_in_gbs
+  - title: "Compute Image"
+    variables:
+      - image_ocid
+      - image_operating_system
+      - image_operating_system_version
+  - title: "Access & Connectivity"
+    variables:
+      - ssh_public_key
+      - bastion_allowed_tcp_ports_csv
+
+variables:
+  tenancy_ocid:
+    type: string
+    required: true
+    title: "Tenancy OCID"
+  region:
+    type: string
+    required: true
+    title: "Region"
+  compartment_ocid:
+    type: string
+    required: true
+    title: "Compartment OCID"
+  landing_zone_name:
+    type: string
+    title: "Landing Zone Name"
+    default: "lab-lz"
+  defined_tags:
+    type: object
+    additionalProperties:
+      type: string
+    title: "Defined Tags"
+  freeform_tags:
+    type: object
+    additionalProperties:
+      type: string
+    title: "Freeform Tags"
+  lab_name:
+    type: string
+    title: "Lab Name Prefix"
+    default: "adghol"
+  landing_zone_subnet_name:
+    type: string
+    title: "Landing Zone Subnet Name"
+    description: "Display name of the existing landing-zone subnet where compute instances are created."
+    default: "lab-lz-subnet-bastion-endpoint"
+  num_compute:
+    type: integer
+    title: "Number of Compute Instances"
+    minimum: 1
+    default: 2
+  ad_number:
+    type: integer
+    title: "Availability Domain Number"
+    minimum: 1
+    default: 1
+  compute_shape:
+    type: string
+    title: "Compute Shape"
+    default: "VM.Standard.E4.Flex"
+  shape_ocpus:
+    type: integer
+    title: "Shape OCPUs"
+    minimum: 1
+    default: 2
+  shape_memory_in_gbs:
+    type: integer
+    title: "Shape Memory (GB)"
+    minimum: 1
+    default: 16
+  image_ocid:
+    type: string
+    title: "Custom Image OCID"
+    description: "Leave empty to auto-resolve latest image by OS/version/shape filters."
+    default: ""
+  image_operating_system:
+    type: string
+    title: "Image Operating System"
+    default: "Oracle Linux"
+  image_operating_system_version:
+    type: string
+    title: "Image Operating System Version"
+    default: "8"
+  ssh_public_key:
+    type: string
+    title: "SSH Public Key"
+    required: true
+    multiline: true
+  bastion_allowed_tcp_ports_csv:
+    type: string
+    title: "Allowed TCP Ports (CSV)"
+    description: "Comma-separated list of destination TCP ports allowed from bastion endpoint subnet (example: 22,1521,3389)."
+    default: "22"

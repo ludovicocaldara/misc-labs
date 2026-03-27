@@ -3,6 +3,15 @@ data "oci_identity_availability_domain" "ad" {
   ad_number      = var.ad_number
 }
 
+data "oci_core_images" "oracle_linux_images" {
+  compartment_id           = var.compartment_ocid
+  operating_system         = var.image_operating_system
+  operating_system_version = var.image_operating_system_version
+  shape                    = var.compute_shape
+  sort_by                  = "TIMECREATED"
+  sort_order               = "DESC"
+}
+
 data "oci_bastion_bastions" "bastions" {
   compartment_id = var.compartment_ocid
 
@@ -31,6 +40,15 @@ data "oci_core_vcns" "landing_zone_vcn" {
   }
 }
 
+data "oci_core_subnets" "landing_zone_subnet" {
+  compartment_id = var.compartment_ocid
+
+  filter {
+    name   = "display_name"
+    values = [var.landing_zone_subnet_name]
+  }
+}
+
 data "oci_core_subnets" "bastion_endpoint_subnet" {
   compartment_id = var.compartment_ocid
 
@@ -40,24 +58,6 @@ data "oci_core_subnets" "bastion_endpoint_subnet" {
   }
 }
 
-output "bastion_endpoint_cidr" {
-  value = data.oci_core_subnets.bastion_endpoint_subnet.subnets[0].cidr_block
-}
-
-data "oci_core_nat_gateways" "landing_zone_nat_gateway" {
-  compartment_id = var.compartment_ocid
-
-  filter {
-    name   = "display_name"
-    values = ["${var.landing_zone_name}-nat"]
-  }
-}
-
-data "oci_core_route_tables" "landing_zone_private_route_table" {
-  compartment_id = var.compartment_ocid
-
-  filter {
-    name   = "display_name"
-    values = ["${var.landing_zone_name}-rt-private"]
-  }
+output "landing_zone_subnet_cidr" {
+  value = data.oci_core_subnets.landing_zone_subnet.subnets[0].cidr_block
 }

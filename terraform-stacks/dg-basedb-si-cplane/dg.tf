@@ -2,7 +2,7 @@ resource "oci_database_data_guard_association" "data_guard_association" {
     depends_on = [oci_database_db_system.db_system]
 	
     creation_type = "NewDbSystem"
-    database_admin_password = oci_database_db_system.db_system.db_home[0].database[0].admin_password
+    database_admin_password = var.db_admin_password
     database_id = oci_database_db_system.db_system.db_home[0].database[0].id
     delete_standby_db_home_on_delete = true
     protection_mode = "MAXIMUM_PERFORMANCE"
@@ -18,12 +18,13 @@ resource "oci_database_data_guard_association" "data_guard_association" {
     # peer_db_system_id = oci_database_db_system.db_system2.id
 
     #--only for new dbsystem:
-    availability_domain = data.oci_identity_availability_domains.availability_domains.availability_domains[0].name
+    availability_domain = data.oci_identity_availability_domain.ad.name
     display_name    = "${var.lab_name}2"
     hostname        = "${var.lab_name}2"
-    nsg_ids         = [data.oci_core_network_security_groups.misc_labs_nsg.network_security_groups[0].id]
-    shape           = var.db_system_shape
-    subnet_id       = oci_core_subnet.db_subnet.id
+    nsg_ids         = [oci_core_network_security_group.lab_nsg.id]
+    shape           = var.db_shape
+    subnet_id       = oci_core_subnet.lab_subnet.id
+    cpu_core_count          = var.cpu_core_count
 
     # database_software_image_id = oci_database_database_software_image.test_database_software_image.id
     # backup_network_nsg_ids = var.data_guard_association_backup_network_nsg_ids
