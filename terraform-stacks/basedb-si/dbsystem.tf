@@ -21,9 +21,9 @@ resource "oci_database_db_system" "db_system" {
 
     database {
       admin_password = var.db_admin_password
-      db_name        = var.lab_name
-      pdb_name       = var.pdb_name
-      db_unique_name = "${var.lab_name}_site${count.index + 1}"
+      db_name        = "${var.lab_name}${count.index + 1}"
+      pdb_name       = "${var.pdb_name}${count.index + 1}"
+      db_unique_name = "${var.lab_name}${count.index + 1}"
     }
   }
 
