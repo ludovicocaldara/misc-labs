@@ -9,7 +9,6 @@ variableGroups:
       - compartment_ocid
       - primary_availability_domain
       - standby_availability_domain
-      - grid_image_id
       - db_admin_password
   - title: "Region"
     variables:
@@ -25,6 +24,8 @@ variableGroups:
   - title: "Cluster Settings"
     variables:
       - ssh_public_key
+      - gi_version
+      - grid_image_id
       - enabled_ecpu_per_node
       - total_ecpu_per_node
       - vmfs_size_gb_per_node
@@ -71,9 +72,16 @@ variables:
 
   grid_image_id:
     type: string
-    title: "Grid Image OCID (DB Patch OCID)"
-    description: "Grid Infrastructure image OCID for ExaDB-XS (ocid1.dbpatch...)"
-    required: true
+    title: "Grid Image OCID Override (DB Patch OCID)"
+    description: "Optional ExaDB-XS Grid Infrastructure image OCID override (ocid1.dbpatch...). Leave empty to discover dynamically from GI Version."
+    required: false
+
+  gi_version:
+    type: string
+    title: "Grid Infrastructure Version"
+    description: "GI major version used to dynamically discover the ExaDB-XS grid image OCID"
+    default: "23.0.0.0"
+    required: false
 
   db_admin_password:
     type: string

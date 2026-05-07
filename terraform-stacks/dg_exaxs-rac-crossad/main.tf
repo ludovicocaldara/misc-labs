@@ -77,9 +77,15 @@ variable "ssh_public_key" {
 }
 
 variable "grid_image_id" {
-  description = "Grid Infrastructure image OCID for ExaDB‑XS (DB Patch OCID, e.g., ocid1.dbpatch...)"
+  description = "Optional Grid Infrastructure image OCID for ExaDB-XS (DB Patch OCID, e.g., ocid1.dbpatch...). When null/empty, Terraform discovers it from gi_version."
   type        = string
-  default     = "ocid1.dbpatch.oc1.phx.anyhqljrt5t4sqqahslcwvoijatwaxlvcyupnrhzksj7fh2kvt4yol2txmhq"
+  default     = null
+}
+
+variable "gi_version" {
+  description = "Grid Infrastructure major version used to discover the ExaDB-XS grid image OCID."
+  type        = string
+  default     = "23.0.0.0"
 }
 
 variable "enabled_ecpu_per_node" {
@@ -104,7 +110,7 @@ variable "vmfs_size_gb_per_node" {
 variable "db_version" {
   description = "Database version label (e.g., 23ai)"
   type        = string
-  default     = "23.9.0.25.07"
+  default     = "23.26.1.0.0"
 }
 
 variable "db_name" {
@@ -204,6 +210,21 @@ locals {
   osn_service      = one([for s in data.oci_core_services.osn.services : s])
   osn_service_id   = local.osn_service.id
   osn_service_cidr = local.osn_service.cidr_block
+}
+
+data "oci_database_gi_version_minor_versions" "exadb_xs" {
+  count = local.use_discovered_grid_image ? 1 : 0
+
+  compartment_id      = var.compartment_ocid
+  availability_domain = var.primary_availability_domain
+  shape_family        = "EXADB_XS"
+  version             = var.gi_version
+}
+
+locals {
+  use_discovered_grid_image = trimspace(coalesce(var.grid_image_id, "")) == ""
+  discovered_grid_image_id  = local.use_discovered_grid_image ? lookup(data.oci_database_gi_version_minor_versions.exadb_xs[0].gi_minor_versions[0], "grid_image_id") : null
+  effective_grid_image_id   = local.use_discovered_grid_image ? local.discovered_grid_image_id : var.grid_image_id
 }
 
 resource "oci_core_service_gateway" "sgw" {
@@ -356,7 +377,7 @@ resource "oci_database_exadb_vm_cluster" "cluster_a" {
   hostname        = "exadbxsa"
   shape           = "ExaDbXS"
   ssh_public_keys = var.ssh_public_key == null ? [] : [var.ssh_public_key]
-  grid_image_id   = var.grid_image_id
+  grid_image_id   = local.effective_grid_image_id
   license_model   = "BRING_YOUR_OWN_LICENSE"
 
   node_config {
@@ -393,7 +414,7 @@ resource "oci_database_exadb_vm_cluster" "cluster_b" {
   hostname        = "exadbxsb"
   shape           = "ExaDbXS"
   ssh_public_keys = var.ssh_public_key == null ? [] : [var.ssh_public_key]
-  grid_image_id   = var.grid_image_id
+  grid_image_id   = local.effective_grid_image_id
   license_model   = "BRING_YOUR_OWN_LICENSE"
 
   node_config {
@@ -556,6 +577,10 @@ output "primary_storage_vault_id" {
 
 output "standby_storage_vault_id" {
   value = oci_database_exascale_db_storage_vault.vault_standby.id
+}
+
+output "grid_image_id" {
+  value = local.effective_grid_image_id
 }
 
 output "cluster_a_id" {
