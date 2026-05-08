@@ -71,19 +71,28 @@ Performance
 ## Grid Infrastructure Image (Critical Requirement)
 
 -   By default, the stack dynamically discovers the Grid Infrastructure
-Patch OCID (resource type: dbpatch) for ExaDB-XS using the OCI Terraform
-data source `oci_database_gi_version_minor_versions`.
+Image OCID for ExaDB-XS separately for each
+Availability Domain using the OCI Terraform data source
+`oci_database_gi_version_minor_versions`.
 
 The lookup uses:
 
 -   `gi_version` (default: `23.0.0.0`)
--   `primary_availability_domain`
+-   `primary_availability_domain` for Cluster A
+-   `standby_availability_domain` for Cluster B
 -   `shape_family = "EXADB_XS"`
 -   `compartment_ocid`
 
-If you need to force a specific patch, set `grid_image_id` to a valid
-ExaDB-XS Grid Infrastructure image OCID. If `grid_image_id` is empty,
-Terraform uses the discovered value.
+Because Grid Infrastructure images are Availability-Domain-specific, the stack
+uses separate effective image IDs:
+
+-   `primary_grid_image_id` for the primary AD ExaDB-XS VM Cluster
+-   `standby_grid_image_id` for the standby AD ExaDB-XS VM Cluster
+
+If you need to force a specific image in one or both ADs, set the corresponding
+AD-specific variable to a valid ExaDB-XS Grid Infrastructure image OCID. If an
+AD-specific image ID is empty, Terraform falls back to `grid_image_id` when set,
+otherwise it dynamically discovers the image for that AD from `gi_version`.
 
 Example format:
 
@@ -91,11 +100,12 @@ ocid1.dbpatch.oc1.`<region>`{=html}.xxxxx
 
 Important:
 
--   This OCID is region-specific.
+-   This OCID is region- and Availability-Domain-specific.
 -   It is NOT created by this Terraform stack; it is discovered from OCI
     metadata or supplied as an override.
 -   It must be compatible with ExaDB-XS.
--   Deployment will fail if it does not match the selected region.
+-   Deployment will fail if it does not match the selected region and
+    Availability Domain.
 
 To retrieve available Grid Infrastructure images:
 
@@ -105,6 +115,8 @@ oci db patch list\
 --compartment-id `<compartment_ocid>`{=html}\
 --patch-type GRID_INFRASTRUCTURE\
 --region `<region>`{=html}
+
+
 
 Or via Console:
 
@@ -127,7 +139,9 @@ Optional Grid Infrastructure inputs:
   Variable              Description
   --------------------- -------------------------------------
   gi_version            GI version used for dynamic image lookup (default: 23.0.0.0)
-  grid_image_id         Optional Grid Infrastructure patch OCID override
+  primary_grid_image_id Optional Grid Infrastructure image OCID override for the primary AD
+  standby_grid_image_id Optional Grid Infrastructure image OCID override for the standby AD
+  grid_image_id         Optional common fallback override for both ADs
 
 ------------------------------------------------------------------------
 
@@ -191,5 +205,6 @@ Destruction is irreversible.
 This stack provisions a complete ExaDB-XS Active Data Guard environment
 in a single region across two Availability Domains, including networking and storage.
 
-The stack discovers a valid, region-matching Grid Infrastructure patch
-OCID automatically unless `grid_image_id` is supplied as an override.
+The stack discovers valid, region- and AD-matching Grid Infrastructure image
+OCIDs automatically unless `primary_grid_image_id`, `standby_grid_image_id`, or
+the common fallback `grid_image_id` are supplied as overrides.

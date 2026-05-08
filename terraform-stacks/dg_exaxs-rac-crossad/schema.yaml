@@ -26,6 +26,8 @@ variableGroups:
       - ssh_public_key
       - gi_version
       - grid_image_id
+      - primary_grid_image_id
+      - standby_grid_image_id
       - enabled_ecpu_per_node
       - total_ecpu_per_node
       - vmfs_size_gb_per_node
@@ -72,8 +74,20 @@ variables:
 
   grid_image_id:
     type: string
-    title: "Grid Image OCID Override (DB Patch OCID)"
-    description: "Optional ExaDB-XS Grid Infrastructure image OCID override (ocid1.dbpatch...). Leave empty to discover dynamically from GI Version."
+    title: "Common Grid Image OCID Override (DB Patch OCID)"
+    description: "Optional common ExaDB-XS Grid Infrastructure image OCID fallback (ocid1.dbpatch...). For cross-AD deployments, prefer Primary Grid Image OCID and Standby Grid Image OCID. Leave empty to discover AD-specific images dynamically from GI Version."
+    required: false
+
+  primary_grid_image_id:
+    type: string
+    title: "Primary AD Grid Image OCID Override (DB Patch OCID)"
+    description: "Optional ExaDB-XS Grid Infrastructure image OCID for the primary Availability Domain. Leave empty to use the common fallback or discover dynamically from GI Version in the primary AD."
+    required: false
+
+  standby_grid_image_id:
+    type: string
+    title: "Standby AD Grid Image OCID Override (DB Patch OCID)"
+    description: "Optional ExaDB-XS Grid Infrastructure image OCID for the standby Availability Domain. Leave empty to use the common fallback or discover dynamically from GI Version in the standby AD."
     required: false
 
   gi_version:

@@ -1,20 +1,6 @@
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    oci = {
-      source  = "hashicorp/oci"
-      version = ">= 7.15.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.10.0"
-    }
-  }
-}
-
 provider "oci" {
-  region = var.region
+  region              = var.region
+  config_file_profile = var.config_file_profile
 }
 
 # -----------------
@@ -25,6 +11,12 @@ variable "region" {
   description = "OCI region (e.g., us-phoenix-1)"
   type        = string
   default     = "us-phoenix-1"
+}
+
+variable "config_file_profile" {
+  description = "OCI CLI config profile to use for local Terraform runs (for example, MAA). Leave null for Resource Manager/default provider authentication."
+  type        = string
+  default     = null
 }
 
 variable "compartment_ocid" {
@@ -77,7 +69,19 @@ variable "ssh_public_key" {
 }
 
 variable "grid_image_id" {
-  description = "Optional Grid Infrastructure image OCID for ExaDB-XS (DB Patch OCID, e.g., ocid1.dbpatch...). When null/empty, Terraform discovers it from gi_version."
+  description = "Optional common Grid Infrastructure image OCID for ExaDB-XS (DB Patch OCID, e.g., ocid1.dbpatch...). Prefer primary_grid_image_id and standby_grid_image_id for cross-AD deployments. When all image IDs are null/empty, Terraform discovers AD-specific images from gi_version."
+  type        = string
+  default     = null
+}
+
+variable "primary_grid_image_id" {
+  description = "Optional Grid Infrastructure image OCID for the primary AD ExaDB-XS VM Cluster. When null/empty, grid_image_id is used as a fallback, then Terraform discovers it from gi_version in primary_availability_domain."
+  type        = string
+  default     = null
+}
+
+variable "standby_grid_image_id" {
+  description = "Optional Grid Infrastructure image OCID for the standby AD ExaDB-XS VM Cluster. When null/empty, grid_image_id is used as a fallback, then Terraform discovers it from gi_version in standby_availability_domain."
   type        = string
   default     = null
 }
@@ -212,8 +216,17 @@ locals {
   osn_service_cidr = local.osn_service.cidr_block
 }
 
-data "oci_database_gi_version_minor_versions" "exadb_xs" {
-  count = local.use_discovered_grid_image ? 1 : 0
+locals {
+  provided_common_grid_image_id  = var.grid_image_id == null ? "" : trimspace(var.grid_image_id)
+  provided_primary_grid_image_id = var.primary_grid_image_id == null ? "" : trimspace(var.primary_grid_image_id)
+  provided_standby_grid_image_id = var.standby_grid_image_id == null ? "" : trimspace(var.standby_grid_image_id)
+
+  use_discovered_primary_grid_image = local.provided_primary_grid_image_id == "" && local.provided_common_grid_image_id == ""
+  use_discovered_standby_grid_image = local.provided_standby_grid_image_id == "" && local.provided_common_grid_image_id == ""
+}
+
+data "oci_database_gi_version_minor_versions" "exadb_xs_primary" {
+  count = local.use_discovered_primary_grid_image ? 1 : 0
 
   compartment_id      = var.compartment_ocid
   availability_domain = var.primary_availability_domain
@@ -221,10 +234,25 @@ data "oci_database_gi_version_minor_versions" "exadb_xs" {
   version             = var.gi_version
 }
 
+data "oci_database_gi_version_minor_versions" "exadb_xs_standby" {
+  count = local.use_discovered_standby_grid_image ? 1 : 0
+
+  compartment_id      = var.compartment_ocid
+  availability_domain = var.standby_availability_domain
+  shape_family        = "EXADB_XS"
+  version             = var.gi_version
+}
+
 locals {
-  use_discovered_grid_image = trimspace(coalesce(var.grid_image_id, "")) == ""
-  discovered_grid_image_id  = local.use_discovered_grid_image ? lookup(data.oci_database_gi_version_minor_versions.exadb_xs[0].gi_minor_versions[0], "grid_image_id") : null
-  effective_grid_image_id   = local.use_discovered_grid_image ? local.discovered_grid_image_id : var.grid_image_id
+  discovered_primary_grid_image_id = local.use_discovered_primary_grid_image ? lookup(data.oci_database_gi_version_minor_versions.exadb_xs_primary[0].gi_minor_versions[0], "grid_image_id") : null
+  discovered_standby_grid_image_id = local.use_discovered_standby_grid_image ? lookup(data.oci_database_gi_version_minor_versions.exadb_xs_standby[0].gi_minor_versions[0], "grid_image_id") : null
+
+  effective_primary_grid_image_id = local.provided_primary_grid_image_id != "" ? local.provided_primary_grid_image_id : (
+    local.provided_common_grid_image_id != "" ? local.provided_common_grid_image_id : local.discovered_primary_grid_image_id
+  )
+  effective_standby_grid_image_id = local.provided_standby_grid_image_id != "" ? local.provided_standby_grid_image_id : (
+    local.provided_common_grid_image_id != "" ? local.provided_common_grid_image_id : local.discovered_standby_grid_image_id
+  )
 }
 
 resource "oci_core_service_gateway" "sgw" {
@@ -375,9 +403,9 @@ resource "oci_database_exadb_vm_cluster" "cluster_a" {
   display_name    = "exadb-xs-cluster-a"
   cluster_name    = "exadbxsa"
   hostname        = "exadbxsa"
-  shape           = "ExaDbXS"
+  shape           = "EXADBXS"
   ssh_public_keys = var.ssh_public_key == null ? [] : [var.ssh_public_key]
-  grid_image_id   = local.effective_grid_image_id
+  grid_image_id   = local.effective_primary_grid_image_id
   license_model   = "BRING_YOUR_OWN_LICENSE"
 
   node_config {
@@ -412,9 +440,9 @@ resource "oci_database_exadb_vm_cluster" "cluster_b" {
   display_name    = "exadb-xs-cluster-b"
   cluster_name    = "exadbxsb"
   hostname        = "exadbxsb"
-  shape           = "ExaDbXS"
+  shape           = "EXADBXS"
   ssh_public_keys = var.ssh_public_key == null ? [] : [var.ssh_public_key]
-  grid_image_id   = local.effective_grid_image_id
+  grid_image_id   = local.effective_standby_grid_image_id
   license_model   = "BRING_YOUR_OWN_LICENSE"
 
   node_config {
@@ -579,8 +607,12 @@ output "standby_storage_vault_id" {
   value = oci_database_exascale_db_storage_vault.vault_standby.id
 }
 
-output "grid_image_id" {
-  value = local.effective_grid_image_id
+output "primary_grid_image_id" {
+  value = local.effective_primary_grid_image_id
+}
+
+output "standby_grid_image_id" {
+  value = local.effective_standby_grid_image_id
 }
 
 output "cluster_a_id" {
