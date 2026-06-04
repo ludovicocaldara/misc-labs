@@ -329,6 +329,17 @@ resource "oci_core_security_list" "sl_common" {
     }
   }
 
+  # ONS port
+  ingress_security_rules {
+    protocol = "6"
+    source   = "0.0.0.0/0"
+
+    tcp_options {
+      min = 6200
+      max = 6200
+    }
+  }
+
   # EM Express
   ingress_security_rules {
     protocol = "6"

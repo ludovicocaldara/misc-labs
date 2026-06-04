@@ -1,0 +1,189 @@
+title: "Data Guard Base DB (Single Instance – Manual Configuration)"
+schemaVersion: "1.1.0"
+version: "1.0.0"
+locale: "en"
+
+variableGroups:
+  - title: "Core OCI Configuration"
+    variables:
+      - tenancy_ocid
+      - region
+      - compartment_ocid
+      - landing_zone_name
+      - defined_tags
+      - freeform_tags
+  - title: "Database System Topology"
+    variables:
+      - lab_name
+      - lab_number
+      - members
+      - ad_number
+      - node_count
+      - db_shape
+      - db_edition
+      - db_version
+      - license_model
+      - cpu_core_count
+      - data_storage_size_in_gb
+      - data_storage_percentage
+      - storage_management
+  - title: "Database Configuration"
+    variables:
+      - pdb_name
+      - db_admin_password
+  - title: "Access & Connectivity"
+    variables:
+      - ssh_public_key
+
+variables:
+  tenancy_ocid:
+    type: string
+    required: true
+    title: "Tenancy OCID"
+    description: "OCID of the tenancy that hosts this lab deployment."
+  region:
+    type: string
+    required: true
+    title: "Region"
+    description: "OCI region identifier where the resources will be created (e.g. eu-frankfurt-1)."
+  compartment_ocid:
+    type: string
+    required: true
+    title: "Compartment OCID"
+    description: "Target compartment where the DB systems and networking artifacts will reside."
+  landing_zone_name:
+    type: string
+    title: "Landing Zone Name"
+    default: "lab-lz"
+    description: "Friendly name of the existing landing zone whose baseline artifacts (VCN, route tables, bastion) this stack reuses."
+  defined_tags:
+    type: object
+    additionalProperties:
+      type: string
+    title: "Defined Tags"
+    description: "OCI defined tags to apply to all created resources."
+  freeform_tags:
+    type: object
+    additionalProperties:
+      type: string
+    title: "Freeform Tags"
+    description: "Freeform tags merged with the default {\"stack\": lab_name}."
+  lab_name:
+    type: string
+    title: "Lab Name Prefix"
+    default: "adghol"
+    description: "Prefix used for hostnames, DB names, and exported identifiers."
+  lab_number:
+    type: integer
+    title: "Lab Number"
+    minimum: 2
+    default: 2
+    description: "Numeric suffix used to derive subnet CIDRs and keep resource names unique across labs."
+  members:
+    type: integer
+    title: "Database Members"
+    minimum: 1
+    default: 2
+    description: "Number of DB systems to create (typically 2 for primary + standby)."
+  ad_number:
+    type: integer
+    title: "Availability Domain Number"
+    minimum: 1
+    default: 1
+    description: "Availability domain ordinal where both DB systems will be provisioned."
+  node_count:
+    type: integer
+    title: "Nodes per DB System"
+    enum:
+      - 1
+      - 2
+    default: 1
+    description: "Number of VM nodes per DB system. Keep 1 for single-instance deployments."
+  db_shape:
+    type: string
+    title: "DB System Shape"
+    enum:
+      - VM.Standard.E4.Flex
+      - VM.Standard.E5.Flex
+      - VM.Standard3.Flex
+      - VM.Standard2.2
+      - VM.Standard2.4
+      - VM.Standard2.8
+      - VM.Standard2.16
+      - VM.Standard2.24
+    default: "VM.Standard.E4.Flex"
+    description: "Compute shape for the single-instance DB systems. Possible values: VM.Standard.E4.Flex, VM.Standard.E5.Flex, VM.Standard3.Flex, VM.Standard2.2, VM.Standard2.4, VM.Standard2.8, VM.Standard2.16, VM.Standard2.24"
+  db_edition:
+    type: string
+    title: "Database Edition"
+    enum:
+      - ENTERPRISE_EDITION
+      - ENTERPRISE_EDITION_HIGH_PERFORMANCE
+      - ENTERPRISE_EDITION_EXTREME_PERFORMANCE
+      - STANDARD_EDITION
+    default: "ENTERPRISE_EDITION_EXTREME_PERFORMANCE"
+    description: "Oracle Database edition. Extreme Performance is required for RAC and Active Data Guard but optional for single-instance labs. Values: ENTERPRISE_EDITION, ENTERPRISE_EDITION_HIGH_PERFORMANCE, ENTERPRISE_EDITION_EXTREME_PERFORMANCE, STANDARD_EDITION"
+  db_version:
+    type: string
+    title: "Database Version"
+    enum:
+      - 19.28.0.0
+      - 19.29.0.0
+      - 21.20.0.0
+      - 21.21.0.0
+      - 23.9.0.25.07
+      - 23.26.0.0.0
+    default: 23.26.0.0.0
+    description: "Oracle Database software version to install on each DB system. Values: 19.28.0.0, 19.29.0.0, 21.20.0.0, 21.21.0.0, 23.9.0.25.07, 23.26.0.0.0"
+  license_model:
+    type: string
+    title: "License Model"
+    enum:
+      - BRING_YOUR_OWN_LICENSE
+      - LICENSE_INCLUDED
+    default: "BRING_YOUR_OWN_LICENSE"
+    description: "Choose whether licenses are provided by you (BYOL) or included with OCI."
+  cpu_core_count:
+    type: integer
+    title: "CPU Cores per Node"
+    minimum: 1
+    default: 2
+    description: "Number of OCPUs per DB system node when using flexible shapes."
+  data_storage_size_in_gb:
+    type: integer
+    title: "Total Data Storage (GB)"
+    minimum: 256
+    default: 256
+    description: "Total usable storage allocated to each DB system."
+  data_storage_percentage:
+    type: integer
+    title: "Data Storage Percentage"
+    minimum: 40
+    maximum: 100
+    default: 80
+    description: "Percentage of total storage dedicated to data disks (remaining goes to reco / spare)."
+  storage_management:
+    type: string
+    title: "Storage Management"
+    enum:
+      - LVM
+      - ASM
+    default: "LVM"
+    description: "Storage management technology for DB volumes."
+  pdb_name:
+    type: string
+    title: "Pluggable Database Name"
+    default: "mypdb"
+    description: "Name assigned to the single PDB created in each DB system."
+  db_admin_password:
+    type: string
+    title: "DB Admin Password"
+    required: true
+    password: true
+    description: "Password for SYS/SYSTEM accounts. Must comply with Oracle password complexity rules."
+  ssh_public_key:
+    type: string
+    title: "SSH Public Key"
+    required: true
+    multiline: true
+    description: "Public SSH key string injected into the DB system nodes for bastion access."

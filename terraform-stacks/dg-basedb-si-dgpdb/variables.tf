@@ -40,14 +40,14 @@ variable "freeform_tags" {
 
 variable "lab_name" {
   type        = string
-  default     = "adghol"
+  default     = "dgpdb"
   description = "Short name used to prefix resource names."
 }
 
 variable "pdb_name" {
   type        = string
-  default     = "mypdb"
-  description = "Name of the PDB created inside each DB system."
+  default     = "pdb"
+  description = "Prefix of the PDB created inside each DB system."
 }
 
 variable "ad_number" {
@@ -59,7 +59,7 @@ variable "ad_number" {
 variable "members" {
   type        = number
   default     = 2
-  description = "Number of DB systems to provision (primary + standby)."
+  description = "Number of DB systems to provision (it should be 2 for DGPDB)."
 }
 
 variable "node_count" {
