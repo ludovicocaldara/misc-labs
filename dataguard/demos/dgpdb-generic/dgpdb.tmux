@@ -10,7 +10,7 @@ select flashback_on, force_logging from v$database ;
 alter database flashback on;
 show parameter standby_file_management
 alter system set standby_file_management = AUTO;
-show parameter dg_broker
+show parameter dg_broker_start
 alter system set dg_broker_start = TRUE;
 exit
 cat $ORACLE_HOME/network/admin/tnsnames.ora
@@ -64,7 +64,7 @@ select flashback_on, force_logging from v$database ;
 alter database flashback on;
 show parameter standby_file_management
 alter system set standby_file_management = AUTO;
-show parameter dg_broker
+show parameter dg_broker_start
 alter system set dg_broker_start = TRUE;
 exit
 cat $ORACLE_HOME/network/admin/tnsnames.ora
@@ -144,8 +144,9 @@ WITH BACKUP USING '{{input:password}}';
 alter session set container=cdb$root;
 ALTER  PLUGGABLE DATABASE {{host2.pdb_name}} CLOSE;
 ALTER  PLUGGABLE DATABASE {{host2.pdb_name}} OPEN;
-select key_id, creator_dbname, creator_pdbname, creator_pdbguid, activating_pdbname, activating_pdbguid from v$encryption_keys;
 -- rekey so the creator PDBGUID matches
+alter session set container={{host2.pdb_name}};
+select key_id, creator_dbname, creator_pdbname, creator_pdbguid, activating_pdbname, activating_pdbguid from v$encryption_keys;
 ADMINISTER KEY MANAGEMENT SET KEY FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
 select con_id, key_id, creator_pdbguid, activating_pdbguid, tag, creation_time, activation_time from v$encryption_keys order by activation_time;
 exit
@@ -214,7 +215,6 @@ exit
 sql / as sysdba
 administer key management import keys with secret "{{input:password}}" from '/tmp/{{host1.dbun}}_{{host1.pdb_name}}.wlt'
  force keystore identified by "{{input:password}}" with backup;
-select con_id, name, guid, to_char(creation_time,'DD-MON-YY HH24:MI:SS') as cr_date from v$containers where name = '{{host2.pdb_name}}';
 exit
 ---# ----------------------------------------  SCENARIO 5: PREPARE THE DATABASES
 --- tmux select-pane -t :.0

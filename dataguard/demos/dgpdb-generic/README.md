@@ -8,6 +8,7 @@ provisioned with the terraform stack: public-network/dg-basedb-si-dgpdb.
 Using OCI Resource Manager or your preferred Terraform runtime, provision the stack [dg-basedb-si-dgpdb](terraform-stacks/public-network/dg-basedb-si-dgpdb).
 
 ## Step 2: Install the tmux-demo-runner 
+
 The [tmux-demo-runner](https://github.com/ludovicocaldara/tmux-demo-runner) can be installed as a VScode extension (handy to directly access the machines via SSH), or as a vim plugin (best if you don't have direct SSH access from your machine).
 
 ## Step 3: Start a tmux session where the tmux-demo-runner is installed
