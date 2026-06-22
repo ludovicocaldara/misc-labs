@@ -114,7 +114,7 @@ variable "vmfs_size_gb_per_node" {
 variable "db_version" {
   description = "Database version label (e.g., 23ai)"
   type        = string
-  default     = "23.26.1.0.0"
+  default     = "23.26.2.0.0"
 }
 
 variable "db_name" {

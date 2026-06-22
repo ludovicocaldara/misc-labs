@@ -99,7 +99,7 @@ variable "vmfs_size_gb_per_node" {
 variable "db_version" {
   description = "Database version label (e.g., 23ai)"
   type        = string
-  default     = "23.9.0.25.07"
+  default     = "23.26.2.0.0"
 }
 
 variable "db_name" {
@@ -467,7 +467,7 @@ resource "time_sleep" "pre_database" {
 # PRIMARY Database in DB Home A (separate resource)
 resource "oci_database_database" "primary" {
   db_home_id = oci_database_db_home.dbhome_a.id
-  source     = "NONE"  # required when creating a fresh DB in an existing DB Home
+  source     = "NONE" # required when creating a fresh DB in an existing DB Home
 
   database {
     db_name        = var.db_name

@@ -10,7 +10,7 @@ variable "compartment_ocid" {
 variable "landing_zone_name" {
   type        = string
   description = "Name of the landing zone (used to reference baseline resources)."
-  default = "lab-lz"
+  default     = "lab-lz"
 }
 
 variable "region" {
@@ -25,12 +25,12 @@ variable "lab_number" {
   description = "Number of the lab (used calculate the subnet CIDR (e.g. 10.50.lab_number.0/24) and eventually to create unique resource names)."
 }
 
-variable "defined_tags"  {
-  type = map(string)
+variable "defined_tags" {
+  type    = map(string)
   default = {}
 }
 variable "freeform_tags" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }
 
@@ -88,7 +88,7 @@ variable "db_shape" {
 
 variable "db_version" {
   type        = string
-  default     = "23.26.1.0.0"
+  default     = "23.26.2.0.0"
   description = "Database software version. This lab targets 23ai."
 }
 

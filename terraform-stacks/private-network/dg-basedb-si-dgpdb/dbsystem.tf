@@ -31,7 +31,7 @@ resource "oci_database_db_system" "db_system" {
     storage_management = var.storage_management
   }
 
-  nsg_ids = [ oci_core_network_security_group.lab_nsg.id ]
+  nsg_ids = [oci_core_network_security_group.lab_nsg.id]
 
   lifecycle {
     ignore_changes = [display_name, hostname]

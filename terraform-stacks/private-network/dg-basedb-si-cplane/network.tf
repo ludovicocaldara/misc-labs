@@ -11,7 +11,7 @@ resource "oci_core_route_table" "db_private" {
     network_entity_id = data.oci_core_nat_gateways.landing_zone_nat_gateway.nat_gateways[0].id
   }
 
-  defined_tags = var.defined_tags
+  defined_tags  = var.defined_tags
   freeform_tags = var.freeform_tags
 }
 
@@ -22,7 +22,7 @@ resource "oci_core_subnet" "lab_subnet" {
   display_name               = "${var.lab_name}-subnet"
   dns_label                  = var.lab_name
   prohibit_public_ip_on_vnic = true
-  route_table_id = data.oci_core_route_tables.landing_zone_private_route_table.route_tables[0].id
+  route_table_id             = data.oci_core_route_tables.landing_zone_private_route_table.route_tables[0].id
 
   defined_tags  = var.defined_tags
   freeform_tags = var.freeform_tags
@@ -40,8 +40,8 @@ resource "oci_core_network_security_group" "lab_nsg" {
 variable "bastion_allowed_tcp_ports" {
   type = map(object({ min = number, max = number }))
   default = {
-    ssh   = { min = 22,   max = 22 }
-    db    = { min = 1521, max = 1521 }
+    ssh = { min = 22, max = 22 }
+    db  = { min = 1521, max = 1521 }
   }
 }
 

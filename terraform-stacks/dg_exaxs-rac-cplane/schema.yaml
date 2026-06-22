@@ -126,8 +126,8 @@ variables:
   db_version:
     type: string
     title: "Database Version"
-    description: "e.g., 23.26.0.0.0"
-    default: "23.26.0.0.0"
+    description: "e.g., 23.26.2.0.0"
+    default: "23.26.2.0.0"
     required: false
 
   db_name:

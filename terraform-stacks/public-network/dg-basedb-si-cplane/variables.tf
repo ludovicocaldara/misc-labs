@@ -1,16 +1,10 @@
 # ----------------------------------
-# Tenancy and landing zone inputs
+# Tenancy and networking inputs
 # ----------------------------------
 
 variable "compartment_ocid" {
   type        = string
   description = "OCID of the compartment where the lab resources are created."
-}
-
-variable "landing_zone_name" {
-  type        = string
-  description = "Name of the landing zone (used to reference baseline resources)."
-  default     = "lab-lz"
 }
 
 variable "region" {
@@ -20,9 +14,34 @@ variable "region" {
 
 variable "tenancy_ocid" { type = string }
 
-variable "lab_number" {
-  type        = number
-  description = "Number of the lab (used calculate the subnet CIDR (e.g. 10.50.lab_number.0/24) and eventually to create unique resource names)."
+variable "vcn_cidr" {
+  type        = string
+  default     = "10.61.0.0/16"
+  description = "CIDR block for the standalone public VCN."
+}
+
+variable "subnet_cidr" {
+  type        = string
+  default     = "10.61.1.0/24"
+  description = "CIDR block for the public DB subnet."
+}
+
+variable "vcn_dns_label" {
+  type        = string
+  default     = "dgcplanevcn"
+  description = "DNS label for the standalone VCN."
+}
+
+variable "subnet_dns_label" {
+  type        = string
+  default     = "dbpub"
+  description = "DNS label for the public DB subnet."
+}
+
+variable "public_ingress_cidrs" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "CIDR blocks allowed to reach the DB systems on public_allowed_tcp_ports. Restrict this for real environments."
 }
 
 variable "defined_tags" {
@@ -54,12 +73,6 @@ variable "ad_number" {
   type        = number
   default     = 1
   description = "Availability domain number where the DB systems will be created."
-}
-
-variable "members" {
-  type        = number
-  default     = 2
-  description = "Number of DB systems to provision (primary + standby)."
 }
 
 variable "node_count" {
@@ -95,7 +108,7 @@ variable "db_shape" {
 variable "db_version" {
   type        = string
   default     = "23.26.2.0.0"
-  description = "Database software version. This lab targets 26ai."
+  description = "Database software version. This lab targets 23ai."
 }
 
 variable "db_edition" {
