@@ -11,7 +11,8 @@ resource "oci_database_db_system" "standby_db_system" {
   cpu_core_count          = var.cpu_core_count
   data_storage_percentage = var.data_storage_percentage
   data_storage_size_in_gb = var.data_storage_size_in_gb
-  primary_db_system_id    = oci_database_db_system.db_system.id
+  database_edition        = var.db_edition
+  source_db_system_id    = oci_database_db_system.db_system.id
   source                  = "DATAGUARD"
 
   db_home {
@@ -20,9 +21,7 @@ resource "oci_database_db_system" "standby_db_system" {
 
     database {
       admin_password               = var.db_admin_password
-      is_active_data_guard_enabled = true
-      protection_mode              = "MAXIMUM_PERFORMANCE"
-      transport_type               = "ASYNC"
+      db_unique_name = "${var.lab_name}_site2"
     }
   }
 
