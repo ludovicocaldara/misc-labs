@@ -1,0 +1,24 @@
+{
+  "demo_name": "Redo Transport TLS Authentication",
+  "presenter": "Ludo",
+  "root_wallet": "/home/oracle/tlsroot",
+  "tls_wallet": "/opt/oracle/dcs/commonstore/tls_wallet/",
+  "host1": {
+    "name": "adghol1",
+    "domain": "dbpub.dgcplanevcn.oraclevcn.com",
+    "public_ip": "<copy here the public IP of host 1>",
+    "private_ip": "<copy here the private IP of host 1>",
+    "oracle_sid": "adghol1",
+    "dbun": "adghol_site1",
+    "pdb_name": "mypdb"
+  },
+  "host2": {
+    "name": "adghol2",
+    "domain": "dbpub.dgcplanevcn.oraclevcn.com",
+    "public_ip": "<copy here the public IP of host 2>",
+    "private_ip": "<copy here the private IP of host 2>",
+    "oracle_sid": "adghol2",
+    "dbun": "adghol_site2",
+    "pdb_name": "mypdb"
+  }
+}
