@@ -1,16 +1,6 @@
 terraform {
   required_version = ">= 1.5.0"
 
-  required_providers {
-    oci = {
-      source  = "hashicorp/oci"
-      version = ">= 7.15.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.10.0"
-    }
-  }
 }
 
 provider "oci" {
@@ -132,6 +122,17 @@ variable "db_admin_password" {
 }
 
 # Data Guard options
+variable "standby_database_count" {
+  description = "Number of standby databases to create in the Data Guard group."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.standby_database_count >= 1 && floor(var.standby_database_count) == var.standby_database_count
+    error_message = "standby_database_count must be a whole number of at least 1."
+  }
+}
+
 variable "enable_active_data_guard" {
   description = "Enable Active Data Guard (read-only standby)."
   type        = bool
@@ -139,9 +140,9 @@ variable "enable_active_data_guard" {
 }
 
 variable "dg_display_name" {
-  description = "Display name for the Data Guard association."
+  description = "Display name prefix for standby DB Homes."
   type        = string
-  default     = "dg-assoc-a-to-b"
+  default     = "dg-standby"
 }
 
 # Timing knobs (tune if service is busy)
@@ -366,16 +367,18 @@ resource "oci_database_exadb_vm_cluster" "cluster_a" {
 }
 
 
-resource "oci_database_exadb_vm_cluster" "cluster_b" {
+resource "oci_database_exadb_vm_cluster" "cluster_standby" {
+  count = var.standby_database_count
+
   compartment_id               = var.compartment_ocid
   availability_domain          = var.availability_domain
   subnet_id                    = oci_core_subnet.subnet_public.id
   backup_subnet_id             = oci_core_subnet.subnet_backup.id
   exascale_db_storage_vault_id = oci_database_exascale_db_storage_vault.vault.id
 
-  display_name    = "exadb-xs-cluster-b"
-  cluster_name    = "exadbxsb"
-  hostname        = "exadbxsb"
+  display_name    = "exadb-xs-cluster-standby-${count.index + 1}"
+  cluster_name    = "exadbxs${count.index + 2}"
+  hostname        = "exadbxs${count.index + 2}"
   shape           = "ExaDbXS"
   ssh_public_keys = var.ssh_public_key == null ? [] : [var.ssh_public_key]
   grid_image_id   = var.grid_image_id
@@ -412,7 +415,7 @@ resource "time_sleep" "post_clusters" {
 
   depends_on = [
     oci_database_exadb_vm_cluster.cluster_a,
-    oci_database_exadb_vm_cluster.cluster_b
+    oci_database_exadb_vm_cluster.cluster_standby
   ]
 }
 
@@ -440,12 +443,14 @@ resource "time_sleep" "between_homes" {
   depends_on      = [oci_database_db_home.dbhome_a]
 }
 
-# DB Home B (EMPTY) on Cluster B
-resource "oci_database_db_home" "dbhome_b" {
-  display_name  = "exadbxs-dbhome-b"
+# Standby DB Homes (EMPTY) on standby clusters
+resource "oci_database_db_home" "dbhome_standby" {
+  count = var.standby_database_count
+
+  display_name  = "${var.dg_display_name}-${count.index + 1}-home"
   db_version    = var.db_version
   source        = "VM_CLUSTER_NEW"
-  vm_cluster_id = oci_database_exadb_vm_cluster.cluster_b.id
+  vm_cluster_id = oci_database_exadb_vm_cluster.cluster_standby[count.index].id
 
   timeouts {
     create = "4h"
@@ -461,7 +466,7 @@ resource "oci_database_db_home" "dbhome_b" {
 # Gap before DB create
 resource "time_sleep" "pre_database" {
   create_duration = "${var.pre_database_wait_seconds}s"
-  depends_on      = [oci_database_db_home.dbhome_b]
+  depends_on      = [oci_database_db_home.dbhome_standby]
 }
 
 # PRIMARY Database in DB Home A (separate resource)
@@ -493,20 +498,21 @@ resource "oci_database_database" "primary" {
   ]
 }
 
-# Data Guard Association A -> B
-resource "oci_database_data_guard_association" "dg" {
-  creation_type                    = "ExistingVmCluster"
-  database_admin_password          = var.db_admin_password
-  database_id                      = oci_database_database.primary.id
-  delete_standby_db_home_on_delete = true
-  protection_mode                  = "MAXIMUM_PERFORMANCE"
-  transport_type                   = "ASYNC"
+# Standby Databases in the primary database's Data Guard group
+resource "oci_database_database" "standby" {
+  count = var.standby_database_count
 
-  peer_vm_cluster_id = oci_database_exadb_vm_cluster.cluster_b.id
-  peer_db_home_id    = oci_database_db_home.dbhome_b.id
+  db_home_id = oci_database_db_home.dbhome_standby[count.index].id
+  source     = "DATAGUARD"
 
-  is_active_data_guard_enabled = var.enable_active_data_guard
-  display_name                 = var.dg_display_name
+  database {
+    database_admin_password      = var.db_admin_password
+    db_unique_name               = "${var.db_name}_site${count.index + 2}"
+    source_database_id           = oci_database_database.primary.id
+    protection_mode              = "MAXIMUM_PERFORMANCE"
+    transport_type               = "ASYNC"
+    is_active_data_guard_enabled = var.enable_active_data_guard
+  }
 
   timeouts {
     create = "4h"
@@ -515,7 +521,7 @@ resource "oci_database_data_guard_association" "dg" {
   }
 
   depends_on = [
-    oci_database_db_home.dbhome_b
+    oci_database_database.primary
   ]
 }
 
@@ -543,22 +549,26 @@ output "cluster_a_id" {
   value = oci_database_exadb_vm_cluster.cluster_a.id
 }
 
-output "cluster_b_id" {
-  value = oci_database_exadb_vm_cluster.cluster_b.id
+output "standby_cluster_ids" {
+  value = oci_database_exadb_vm_cluster.cluster_standby[*].id
 }
 
 output "dbhome_a_id" {
   value = oci_database_db_home.dbhome_a.id
 }
 
-output "dbhome_b_id" {
-  value = oci_database_db_home.dbhome_b.id
+output "standby_dbhome_ids" {
+  value = oci_database_db_home.dbhome_standby[*].id
 }
 
 output "primary_db_id" {
   value = oci_database_database.primary.id
 }
 
-output "dg_association_id" {
-  value = oci_database_data_guard_association.dg.id
+output "standby_db_ids" {
+  value = oci_database_database.standby[*].id
+}
+
+output "data_guard_group" {
+  value = oci_database_database.primary.data_guard_group
 }

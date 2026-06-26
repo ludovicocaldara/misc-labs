@@ -34,6 +34,7 @@ variableGroups:
       - pdb_name
   - title: "Data Guard"
     variables:
+      - standby_database_count
       - enable_active_data_guard
       - dg_display_name
   - title: "Timing / Backoff"
@@ -142,6 +143,14 @@ variables:
     default: "mypdb"
     required: false
 
+  standby_database_count:
+    type: number
+    title: "Standby Database Count"
+    description: "Number of standby databases to create in the Data Guard group"
+    default: 1
+    minimum: 1
+    required: false
+
   enable_active_data_guard:
     type: boolean
     title: "Enable Active Data Guard"
@@ -151,8 +160,9 @@ variables:
 
   dg_display_name:
     type: string
-    title: "Data Guard Display Name"
-    default: "dg-assoc-a-to-b"
+    title: "Standby DB Home Display Prefix"
+    description: "Display name prefix for standby DB Homes"
+    default: "dg-standby"
     required: false
 
   post_cluster_wait_seconds:

@@ -7,11 +7,12 @@ This stack creates:
 
 -   Full VCN networking
 -   Exascale Storage Vault
--   Two ExaDB-XS RAC VM Clusters
--   Two DB Homes
+-   One primary ExaDB-XS RAC VM Cluster
+-   One or more standby ExaDB-XS RAC VM Clusters
+-   One primary DB Home and one DB Home per standby
 -   One Primary CDB
--   One Standby CDB (via Data Guard)
--   Optional Active Data Guard (read-only standby)
+-   One or more Standby CDBs in a Data Guard group
+-   Optional Active Data Guard (read-only standby databases)
 
 > Single-region deployment (both clusters in same Availability Domain)
 
@@ -20,11 +21,11 @@ This stack creates:
 ## Architecture Overview
 
 VCN ├── Public Subnet │ ├── ExaDB-XS Cluster A (Primary) │ └── ExaDB-XS
-Cluster B (Standby) │ └── Backup Subnet (Private)
+Standby Cluster(s) │ └── Backup Subnet (Private)
 
 Shared Exascale Storage Vault
 
-Primary DB (Cluster A) ---\> Standby DB (Cluster B) ASYNC, Maximum
+Primary DB (Cluster A) ---\> Standby DB(s) ASYNC, Maximum
 Performance
 
 ------------------------------------------------------------------------
@@ -42,15 +43,18 @@ Performance
 -   Security List (22, 1521, 5500 open)
 -   Public Subnet (for clusters)
 -   Backup Subnet (private)
+-   `standby_database_count` controls how many standby databases are
+    created. The default is 1.
 
 ## Database Infrastructure
 
 -   Exascale Storage Vault
--   2 × ExaDB-XS VM Clusters (2-node RAC each)
--   2 × DB Homes
+-   1 primary ExaDB-XS VM Cluster plus `standby_database_count` standby
+    VM Cluster(s) (2-node RAC each)
+-   1 primary DB Home plus `standby_database_count` standby DB Home(s)
 -   1 × Primary Database (CDB + PDB)
--   1 × Standby Database (created via Data Guard)
--   Data Guard Association (ASYNC, Maximum Performance)
+-   `standby_database_count` × Standby Database(s)
+-   Data Guard group (ASYNC, Maximum Performance)
 
 ------------------------------------------------------------------------
 
@@ -59,7 +63,8 @@ Performance
 ## OCI Requirements
 
 -   Sufficient quota for:
-    -   2 × ExaDB-XS VM Clusters
+    -   1 primary ExaDB-XS VM Cluster plus the configured number of
+        standby ExaDB-XS VM Clusters
     -   Exascale Storage Vault
 -   IAM permissions:
     -   manage database-family
