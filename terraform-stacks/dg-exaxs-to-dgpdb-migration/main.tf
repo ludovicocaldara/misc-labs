@@ -62,13 +62,29 @@ variable "ssh_public_key" {
 }
 
 variable "grid_image_id" {
-  description = "Optional Grid Infrastructure image OCID override for ExaDB-XS (DB Patch OCID, e.g., ocid1.dbpatch...). When null/empty, Terraform discovers the image from gi_version in availability_domain."
+  description = <<-EOT
+    Optional Grid Infrastructure image OCID override for ExaDB-XS.
+
+    Expected value: an OCI Database Patch OCID for a Grid Infrastructure image,
+    for example ocid1.dbpatch.oc1.<region>.<unique_id>.
+
+    Leave this unset or empty for the normal path: Terraform discovers a valid
+    image from gi_version, region, availability_domain, compartment_ocid, and
+    shape_family = EXADB_XS. Set this only when you need to pin a known-good GI
+    image. The OCID must match the selected region and Availability Domain.
+  EOT
   type        = string
   default     = null
 }
 
 variable "gi_version" {
-  description = "Grid Infrastructure major version used to discover the ExaDB-XS grid image OCID."
+  description = <<-EOT
+    Grid Infrastructure major version used for dynamic ExaDB-XS image lookup.
+
+    Expected value: a GI major version such as 23.0.0.0. Terraform asks OCI for
+    compatible minor versions for this GI version and selects the first returned
+    entry that includes a grid_image_id.
+  EOT
   type        = string
   default     = "23.0.0.0"
 }
@@ -217,7 +233,13 @@ data "oci_database_gi_version_minor_versions" "exadb_xs" {
 }
 
 locals {
-  discovered_grid_image_id = local.use_discovered_grid_image_id ? lookup(data.oci_database_gi_version_minor_versions.exadb_xs[0].gi_minor_versions[0], "grid_image_id") : null
+  discovered_grid_image_ids = local.use_discovered_grid_image_id ? [
+    for minor_version in coalesce(try(data.oci_database_gi_version_minor_versions.exadb_xs[0].gi_minor_versions, []), []) :
+    minor_version.grid_image_id
+    if try(trimspace(minor_version.grid_image_id), "") != ""
+  ] : []
+
+  discovered_grid_image_id = length(local.discovered_grid_image_ids) > 0 ? local.discovered_grid_image_ids[0] : null
   effective_grid_image_id  = local.provided_grid_image_id != "" ? local.provided_grid_image_id : local.discovered_grid_image_id
 }
 
@@ -383,6 +405,13 @@ resource "oci_database_exadb_vm_cluster" "cluster_a" {
     update = "6h"
     delete = "6h"
   }
+
+  lifecycle {
+    precondition {
+      condition     = try(trimspace(local.effective_grid_image_id), "") != ""
+      error_message = "Unable to determine a Grid Infrastructure image OCID. Set grid_image_id explicitly, or verify gi_version, availability_domain, region, compartment_ocid, and OCI support for EXADB_XS GI image discovery."
+    }
+  }
 }
 
 
@@ -419,6 +448,13 @@ resource "oci_database_exadb_vm_cluster" "cluster_b" {
     create = "6h"
     update = "6h"
     delete = "6h"
+  }
+
+  lifecycle {
+    precondition {
+      condition     = try(trimspace(local.effective_grid_image_id), "") != ""
+      error_message = "Unable to determine a Grid Infrastructure image OCID. Set grid_image_id explicitly, or verify gi_version, availability_domain, region, compartment_ocid, and OCI support for EXADB_XS GI image discovery."
+    }
   }
 }
 

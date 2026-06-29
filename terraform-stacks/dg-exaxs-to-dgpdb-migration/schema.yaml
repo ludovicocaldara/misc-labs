@@ -67,13 +67,24 @@ variables:
   grid_image_id:
     type: string
     title: "Grid Image OCID Override (DB Patch OCID)"
-    description: "Optional ExaDB-XS Grid Infrastructure image OCID override (ocid1.dbpatch...). Leave empty to discover the image dynamically from GI Version in the selected Availability Domain."
+    description: >
+      Optional ExaDB-XS Grid Infrastructure image OCID override. Expected value
+      is an OCI Database Patch OCID for a Grid Infrastructure image, for example
+      ocid1.dbpatch.oc1.<region>.<unique_id>. Leave empty for the normal path:
+      Terraform discovers a valid image from GI Version, Region, Availability
+      Domain, Compartment OCID, and shape family EXADB_XS. Set this only to pin
+      a known-good GI image. The OCID must match the selected Region and
+      Availability Domain.
     required: false
 
   gi_version:
     type: string
     title: "Grid Infrastructure Version"
-    description: "GI major version used to dynamically discover the ExaDB-XS grid image OCID"
+    description: >
+      Grid Infrastructure major version used for dynamic ExaDB-XS image lookup.
+      Expected value is a GI major version such as 23.0.0.0. Terraform asks OCI
+      for compatible minor versions for this GI version and selects the first
+      returned entry that includes a grid_image_id.
     default: "23.0.0.0"
     required: false
 
