@@ -5,14 +5,14 @@ OCI Resource Manager.
 
 This stack creates:
 
--   Full VCN networking
--   Exascale Storage Vault
--   One primary ExaDB-XS RAC VM Cluster
--   One or more standby ExaDB-XS RAC VM Clusters
--   One primary DB Home and one DB Home per standby
--   One Primary CDB
--   One or more Standby CDBs in a Data Guard group
--   Optional Active Data Guard (read-only standby databases)
+- Full VCN networking
+- Exascale Storage Vault
+- One primary ExaDB-XS RAC VM Cluster
+- One or more standby ExaDB-XS RAC VM Clusters
+- One primary DB Home and one DB Home per standby
+- One Primary CDB
+- One or more Standby CDBs in a Data Guard group
+- Optional Active Data Guard (read-only standby databases)
 
 > Single-region deployment (both clusters in same Availability Domain)
 
@@ -30,53 +30,66 @@ Performance
 
 ------------------------------------------------------------------------
 
-# What This Stack Creates
+## What This Stack Creates
 
-## Networking
+### Networking
 
--   VCN
--   Internet Gateway
--   NAT Gateway
--   Service Gateway
--   Public Route Table
--   Private Route Table
--   Security List (22, 1521, 5500 open)
--   Public Subnet (for clusters)
--   Backup Subnet (private)
--   `standby_database_count` controls how many standby databases are
+- VCN
+- Internet Gateway
+- NAT Gateway
+- Service Gateway
+- Public Route Table
+- Private Route Table
+- Security List (22, 1521, 5500 open)
+- Public Subnet (for clusters)
+- Backup Subnet (private)
+- `standby_database_count` controls how many standby databases are
     created. The default is 1.
 
-## Database Infrastructure
+### Database Infrastructure
 
--   Exascale Storage Vault
--   1 primary ExaDB-XS VM Cluster plus `standby_database_count` standby
-    VM Cluster(s) (2-node RAC each)
--   1 primary DB Home plus `standby_database_count` standby DB Home(s)
--   1 × Primary Database (CDB + PDB)
--   `standby_database_count` × Standby Database(s)
--   Data Guard group (ASYNC, Maximum Performance)
+- Exascale Storage Vault
+- 1 primary ExaDB-XS VM Cluster plus `standby_database_count` standby
+  VM Cluster(s) (2-node RAC each)
+- 1 primary DB Home plus `standby_database_count` standby DB Home(s)
+- 1 × Primary Database (CDB + PDB)
+- `standby_database_count` × Standby Database(s)
+- Data Guard group (ASYNC, Maximum Performance)
 
 ------------------------------------------------------------------------
 
-# Prerequisites
+## Prerequisites
 
-## OCI Requirements
+### OCI Requirements
 
--   Sufficient quota for:
-    -   1 primary ExaDB-XS VM Cluster plus the configured number of
+- Sufficient quota for:
+  - 1 primary ExaDB-XS VM Cluster plus the configured number of
         standby ExaDB-XS VM Clusters
-    -   Exascale Storage Vault
--   IAM permissions:
-    -   manage database-family
-    -   manage virtual-network-family
-    -   manage orm-stacks
+  - Exascale Storage Vault
+- IAM permissions:
+  - manage database-family
+  - manage virtual-network-family
+  - manage orm-stacks
 
 ------------------------------------------------------------------------
 
-## Grid Infrastructure Image (Critical Requirement)
+### Grid Infrastructure Image (Critical Requirement)
 
-The variable `grid_image_id` must be set to a valid Grid Infrastructure
-Patch OCID (resource type: dbpatch).
+- By default, the stack dynamically discovers the Grid Infrastructure
+Image OCID for ExaDB-XS in the selected Availability Domain using the OCI
+Terraform data source `oci_database_gi_version_minor_versions`.
+
+The lookup uses:
+
+- `gi_version` (default: `23.0.0.0`)
+- `availability_domain`
+- `shape_family = "EXADB_XS"`
+- `compartment_ocid`
+
+If you need to force a specific image, set `grid_image_id` to a valid
+ExaDB-XS Grid Infrastructure Patch OCID (resource type: dbpatch). If
+`grid_image_id` is empty, Terraform dynamically discovers the image from
+`gi_version`.
 
 Example format:
 
@@ -84,11 +97,12 @@ ocid1.dbpatch.oc1.`<region>`{=html}.xxxxx
 
 Important:
 
--   This OCID is region-specific.
--   It is NOT created by this Terraform stack.
--   It must already exist in OCI.
--   It must be compatible with ExaDB-XS.
--   Deployment will fail if it does not match the selected region.
+- This OCID is region- and Availability-Domain-specific.
+- It is NOT created by this Terraform stack.
+- It must already exist in OCI.
+- It must be compatible with ExaDB-XS.
+- Deployment will fail if it does not match the selected region and
+Availability Domain.
 
 To retrieve available Grid Infrastructure images:
 
@@ -105,32 +119,42 @@ Oracle Database → Exadata Infrastructure → Patches
 
 ------------------------------------------------------------------------
 
-# Required Inputs
+## Required Inputs
 
+```text
   Variable              Description
   --------------------- -------------------------------------
   compartment_ocid      Target compartment
   availability_domain   AD for ExaDB-XS
-  grid_image_id         Grid Infrastructure patch OCID
   db_admin_password     SYS password (\>=12 chars, complex)
   ssh_public_key        SSH public key for cluster nodes
+```
+
+Optional Grid Infrastructure inputs:
+
+```text
+  Variable              Description
+  --------------------- -------------------------------------
+  gi_version            GI version used for dynamic image lookup (default: 23.0.0.0)
+  grid_image_id         Optional Grid Infrastructure patch OCID override
+```
 
 ------------------------------------------------------------------------
 
-# Deployment Steps
+## Deployment Steps
 
-1.  Go to OCI → Developer Services → Resource Manager
-2.  Create Stack
-3.  Upload ZIP (main.tf + schema.yaml)
-4.  Provide required inputs
-5.  Click Plan
-6.  Click Apply
+1. Go to OCI → Developer Services → Resource Manager
+2. Create Stack
+3. Upload ZIP (main.tf + schema.yaml)
+4. Provide required inputs
+5. Click Plan
+6. Click Apply
 
 Estimated provisioning time: 2--4 hours.
 
 ------------------------------------------------------------------------
 
-# Post-Deployment Validation
+## Post-Deployment Validation
 
 Check Database Role:
 
@@ -147,23 +171,22 @@ Expect: - RFS running - MRP running
 
 ------------------------------------------------------------------------
 
-# Important Notes
+## Important Notes
 
--   Single-region deployment (not cross-region DR).
--   Security list allows inbound from 0.0.0.0/0 (not production
-    hardened).
--   Auto-backup is disabled.
--   Protection mode is MAXIMUM_PERFORMANCE.
--   Terraform does not manage runtime switchover/failover state.
+- Single-region deployment (not cross-region DR).
+- Security list allows inbound from 0.0.0.0/0 (not production hardened).
+- Auto-backup is disabled.
+- Protection mode is MAXIMUM_PERFORMANCE.
+- Terraform does not manage runtime switchover/failover state.
 
 ------------------------------------------------------------------------
 
-# Destroying the Environment
+## Destroying the Environment
 
 From Resource Manager:
 
-1.  Open the Stack
-2.  Click Destroy
+1. Open the Stack
+2. Click Destroy
 
 This removes all networking, clusters, DB Homes, databases, and Data
 Guard configuration.
@@ -172,10 +195,11 @@ Destruction is irreversible.
 
 ------------------------------------------------------------------------
 
-# Summary
+## Summary
 
 This stack provisions a complete ExaDB-XS Active Data Guard environment
 in a single region, including networking and storage.
 
-The only external dependency is a valid, region-matching Grid
-Infrastructure patch OCID.
+The stack discovers a valid, region- and Availability-Domain-matching Grid
+Infrastructure image OCID automatically unless `grid_image_id` is supplied as
+an override.
