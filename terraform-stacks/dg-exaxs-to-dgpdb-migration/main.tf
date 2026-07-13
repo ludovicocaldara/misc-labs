@@ -69,9 +69,10 @@ variable "grid_image_id" {
     for example ocid1.dbpatch.oc1.<region>.<unique_id>.
 
     Leave this unset or empty for the normal path: Terraform discovers a valid
-    image from gi_version, region, availability_domain, compartment_ocid, and
-    shape_family = EXADB_XS. Set this only when you need to pin a known-good GI
-    image. The OCID must match the selected region and Availability Domain.
+    provisioning-capable image from gi_version, region, availability_domain,
+    compartment_ocid, and shape_family = EXADB_XS. Set this only when you need
+    to pin a known-good GI image. The OCID must match the selected region and
+    Availability Domain.
   EOT
   type        = string
   default     = null
@@ -82,8 +83,8 @@ variable "gi_version" {
     Grid Infrastructure major version used for dynamic ExaDB-XS image lookup.
 
     Expected value: a GI major version such as 23.0.0.0. Terraform asks OCI for
-    compatible minor versions for this GI version and selects the first returned
-    entry that includes a grid_image_id.
+    compatible provisioning-capable minor versions for EXADB_XS and selects the
+    first returned entry that includes a grid_image_id.
   EOT
   type        = string
   default     = "23.0.0.0"
@@ -226,10 +227,11 @@ locals {
 data "oci_database_gi_version_minor_versions" "exadb_xs" {
   count = local.use_discovered_grid_image_id ? 1 : 0
 
-  compartment_id      = var.compartment_ocid
-  availability_domain = var.availability_domain
-  shape_family        = "EXADB_XS"
-  version             = var.gi_version
+  compartment_id                 = var.compartment_ocid
+  availability_domain            = var.availability_domain
+  is_gi_version_for_provisioning = true
+  shape_family                   = "EXADB_XS"
+  version                        = var.gi_version
 }
 
 locals {

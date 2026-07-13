@@ -1,0 +1,22 @@
+{
+  "demo_name": "Data Guard per Pluggable Database 26ai",
+  "presenter": "Ludo",
+  "host1": {
+    "name": "dgpdb1",
+    "domain": "dbpub.dgpdbvcn.oraclevcn.com",
+    "public_ip": "<copy here the public IP of host 1>",
+    "private_ip": "<copy here the private IP of host 1>",
+    "oracle_sid": "dgpdb1",
+    "dbun": "dgpdb_site1",
+    "pdb_name": "MYPDB1"
+  },
+  "host2": {
+    "name": "dgpdb2",
+    "domain": "dbpub.dgpdbvcn.oraclevcn.com",
+    "public_ip": "<copy here the public IP of host 2>",
+    "private_ip": "<copy here the private IP of host 2>",
+    "oracle_sid": "dgpdb2",
+    "dbun": "dgpdb_site2",
+    "pdb_name": "MYPDB2"
+  }
+}
