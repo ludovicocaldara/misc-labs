@@ -58,3 +58,6 @@ resmgr.tf
 
 # everything nogit
 *.nogit
+
+# rendered demos
+*.rendered

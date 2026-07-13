@@ -1,22 +1,75 @@
 {
   "demo_name": "Data Guard per Pluggable Database 26ai",
   "presenter": "Ludo",
-  "host1": {
-    "name": "dgpdb1",
-    "domain": "dbpub.dgpdbvcn.oraclevcn.com",
-    "public_ip": "<copy here the public IP of host 1>",
-    "private_ip": "<copy here the private IP of host 1>",
-    "oracle_sid": "dgpdb1",
-    "dbun": "dgpdb_site1",
-    "pdb_name": "MYPDB1"
+  "public_key": "-i ~/.ssh/id_rsa",
+  "clu1": {
+    "host1": {
+      "name": "clu1host1",
+      "domain": "public.exadbvcn.oraclevcn.com",
+      "public_ip": "x.x.x.x",
+      "private_ip": "x.x.x.x"
+    },
+    "host2": {
+      "name": "clu1host2",
+      "domain": "public.exadbvcn.oraclevcn.com",
+      "public_ip": "x.x.x.x",
+      "private_ip": "x.x.x.x"
+    },
+    "dgcdb": {
+      "oh": "/u02/app/oracle/product/23.0.0.0/dbhome_1",
+      "dbun": "dgcdb_xxx",
+      "inst1": "dgcdb1",
+      "inst2": "dgcdb2",
+      "dbname": "dgcdb",
+      "pdb_name": "MYPDB"
+    },
+    "dgpdb": {
+      "oh": "/u02/app/oracle/product/23.0.0.0/dbhome_1",
+      "dbun": "dgpdb1",
+      "inst1": "dgpdb11",
+      "inst2": "dgpdb12",
+      "dbname": "dgpdb1",
+      "pdb_name": "PDB1"
+    },
+    "scan1": "x.x.x.x",
+    "scan2": "x.x.x.x",
+    "scan3": "x.x.x.x",
+    "scan_name": "exadbxsa-scan-xxx",
+    "domain": "public.exadbvcn.oraclevcn.com"
   },
-  "host2": {
-    "name": "dgpdb2",
-    "domain": "dbpub.dgpdbvcn.oraclevcn.com",
-    "public_ip": "<copy here the public IP of host 2>",
-    "private_ip": "<copy here the private IP of host 2>",
-    "oracle_sid": "dgpdb2",
-    "dbun": "dgpdb_site2",
-    "pdb_name": "MYPDB2"
+  "clu2": {
+    "host1": {
+      "name": "clu2host1",
+      "domain": "public.exadbvcn.oraclevcn.com",
+      "public_ip": "x.x.x.x",
+      "private_ip": "x.x.x.x"
+    },
+    "host2": {
+      "name": "clu2host2",
+      "domain": "public.exadbvcn.oraclevcn.com",
+      "public_ip": "x.x.x.x",
+      "private_ip": "x.x.x.x"
+    },
+    "dgcdb": {
+      "oh": "/u02/app/oracle/product/23.0.0.0/dbhome_1",
+      "dbun": "dgcdb_xxx",
+      "inst1": "dgcdb1",
+      "inst2": "dgcdb2",
+      "dbname": "dgcdb",
+      "pdb_name": "MYPDB"
+    },
+    "dgpdb": {
+      "oh": "/u02/app/oracle/product/23.0.0.0/dbhome_1",
+      "dbun": "dgpdb2",
+      "inst1": "dgpdb21",
+      "inst2": "dgpdb22",
+      "dbname": "dgpdb2",
+      "pdb_name": "PDB2"
+    },
+    "scan1": "x.x.x.x",
+    "scan2": "x.x.x.x",
+    "scan3": "x.x.x.x",
+    "scan_name": "exadbxsb-scan-xxx",
+    "domain": "public.exadbvcn.oraclevcn.com"
   }
 }
