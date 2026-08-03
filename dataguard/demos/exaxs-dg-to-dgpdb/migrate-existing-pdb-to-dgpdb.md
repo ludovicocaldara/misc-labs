@@ -12,7 +12,7 @@ The example was developed and validated in an Oracle AI Database 26ai Release 23
 The same cluster nodes therefore host both the DGPDB CDB and the conventional Data Guard database. The example uses the following logical names:
 
 | Component | Cluster 1 | Cluster 2 |
-|---|---|---|
+| --- | --- | --- |
 | DGPDB CDB | `dgpdb1` | `dgpdb2` |
 | Conventional Data Guard database | `dgcdb` primary database | `dgcdb` standby database |
 | Existing PDB to convert | `MYPDB` in the primary database | `MYPDB` in the standby database |
@@ -72,7 +72,7 @@ Ensure that the following requirements are met:
 ## Naming Used in the Examples
 
 | Placeholder or example | Meaning |
-|---|---|
+| --- | --- |
 | `dgpdb1` | DGPDB CDB on Cluster 1 |
 | `dgpdb2` | DGPDB CDB on Cluster 2 |
 | `dgpdb11`, `dgpdb12` | RAC instances of `dgpdb1` |
@@ -443,7 +443,6 @@ DGMGRL> ADD PLUGGABLE DATABASE PDB1 AT dgpdb2
   'KEYSTORE IDENTIFIED BY "<keystore-password>"';
 ```
 
-
 Add `PDB2` to `dgpdb1`, using `PDB2` in `dgpdb2` as its source:
 
 ```text
@@ -645,7 +644,7 @@ CREATE PLUGGABLE DATABASE MYPDB
   KEYSTORE IDENTIFIED BY "<keystore-password>";
 ```
 
-### 8.3 Open the PDB and Import Its Keys
+### 8.3 Import the PDB keys and open it
 
 ```sql
 ALTER SESSION SET CONTAINER=MYPDB;
@@ -658,6 +657,8 @@ ADMINISTER KEY MANAGEMENT IMPORT KEYS
 
 ALTER PLUGGABLE DATABASE MYPDB OPEN INSTANCES=ALL;
 ```
+
+The import operation might require closing and opening the PDB again.
 
 Check for unresolved plug-in errors:
 

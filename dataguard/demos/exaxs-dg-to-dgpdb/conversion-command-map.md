@@ -9,7 +9,7 @@ It is intended for technical review. It records the execution location, database
 ## Topology Interpretation
 
 | Demo panes | Physical location | Database environments used |
-|---|---|---|
+| --- | --- | --- |
 | Pane 0 | Cluster 1, node 1 | `dgpdb1`; conventional Data Guard primary `dgcdb` |
 | Pane 1 | Cluster 1, node 2 | `dgpdb1`; temporary file-transfer shell in the demo |
 | Pane 2 | Cluster 2, node 1 | `dgpdb2`; conventional Data Guard standby `dgcdb` |
@@ -20,7 +20,7 @@ The customer playbook replaces pane references with explicit cluster and databas
 ## Terminology Adaptations
 
 | Demo wording or implication | Customer playbook wording |
-|---|---|
+| --- | --- |
 | Primary or standby DGPDB database | Not used |
 | Primary or standby DGPDB host | Not used |
 | DGPDB source side | Source PDB in a named CDB |
@@ -33,7 +33,7 @@ The customer playbook replaces pane references with explicit cluster and databas
 ## Block-by-Block Mapping
 
 | Original block | Execution context | Playbook section | Treatment and review notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Introductory comments | N/A | About This Playbook; Scope | Rewritten to describe two RAC clusters that host both DGPDB CDBs and the members of the conventional Data Guard configuration. Corrected DGPDB terminology so roles apply to PDBs, not CDBs. |
 | Connections and tmux window setup | All four nodes | Omitted | SSH commands, pane creation, pane titles, and pane selection are demo-only mechanics. |
 | YUM, Git, `rlwrap`, and COE setup | All nodes | Omitted | Explicitly excluded by request. No dependency on `sid`, `sql`, or `u` helper functions remains. |
