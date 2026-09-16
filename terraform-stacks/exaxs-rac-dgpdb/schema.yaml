@@ -1,0 +1,176 @@
+title: "ExaDB-XS RAC DGPDB Prerequisites"
+schemaVersion: 1.1.0
+version: "1.0.0"
+locale: "en"
+
+variableGroups:
+  - title: "Required"
+    variables:
+      - compartment_ocid
+      - availability_domain
+      - db_admin_password
+  - title: "Region"
+    variables:
+      - region
+  - title: "Networking"
+    variables:
+      - vcn_cidr
+      - backup_subnet_cidr
+      - public_subnet_cidr
+  - title: "Vault Capacity"
+    variables:
+      - vault_highcap_size_gb
+  - title: "Cluster Settings"
+    variables:
+      - ssh_public_key
+      - gi_version
+      - grid_image_id
+      - enabled_ecpu_per_node
+      - total_ecpu_per_node
+      - vmfs_size_gb_per_node
+  - title: "DGPDB CDB Settings"
+    variables:
+      - db_version
+      - dgpdb1_name
+      - dgpdb2_name
+      - pdb_name
+  - title: "Timing / Backoff"
+    variables:
+      - post_cluster_wait_seconds
+      - between_dbhomes_wait_seconds
+      - pre_database_wait_seconds
+
+variables:
+  region:
+    type: string
+    title: "Region"
+    description: "OCI region"
+    default: "us-phoenix-1"
+    required: true
+
+  compartment_ocid:
+    type: string
+    title: "Compartment OCID"
+    description: "Target compartment for all resources"
+    required: true
+
+  availability_domain:
+    type: string
+    title: "Availability Domain"
+    description: "Use your tenancy Availability Domain, for example: AAef:PHX-AD-1"
+    required: true
+
+  db_admin_password:
+    type: string
+    title: "DB Admin Password"
+    description: ">=12 chars with upper/lower/digit/special"
+    sensitive: true
+    required: true
+
+  vcn_cidr:
+    type: string
+    title: "VCN CIDR"
+    default: "10.40.0.0/16"
+    required: false
+
+  backup_subnet_cidr:
+    type: string
+    title: "Backup Subnet CIDR (private)"
+    default: "10.40.2.0/24"
+    required: false
+
+  public_subnet_cidr:
+    type: string
+    title: "Public Subnet CIDR (used by both VM clusters)"
+    default: "10.40.10.0/24"
+    required: false
+
+  vault_highcap_size_gb:
+    type: number
+    title: "Vault High Capacity Size (GiB)"
+    default: 500
+    required: false
+
+  ssh_public_key:
+    type: string
+    title: "SSH Public Key"
+    description: "Optional OpenSSH public key for cluster nodes"
+    required: false
+
+  grid_image_id:
+    type: string
+    title: "Grid Image OCID Override (DB Patch OCID)"
+    description: >
+      Optional ExaDB-XS Grid Infrastructure image OCID override. Leave empty
+      to discover a provisioning-capable image dynamically from the selected
+      GI Version and Availability Domain.
+    required: false
+
+  gi_version:
+    type: string
+    title: "Grid Infrastructure Version"
+    description: "GI major version used to discover the ExaDB-XS grid image"
+    default: "23.0.0.0"
+    required: false
+
+  enabled_ecpu_per_node:
+    type: number
+    title: "Enabled ECPUs per Node"
+    default: 8
+    required: false
+
+  total_ecpu_per_node:
+    type: number
+    title: "Total ECPUs per Node (cap)"
+    default: 8
+    required: false
+
+  vmfs_size_gb_per_node:
+    type: number
+    title: "VM File System Size per Node (GiB)"
+    default: 250
+    required: false
+
+  db_version:
+    type: string
+    title: "Database Version"
+    default: "23.26.2.0.0"
+    required: false
+
+  dgpdb1_name:
+    type: string
+    title: "DGPDB CDB 1 Name"
+    description: "Independent RAC CDB on Cluster A"
+    default: "dgpdb1"
+    required: false
+
+  dgpdb2_name:
+    type: string
+    title: "DGPDB CDB 2 Name"
+    description: "Independent RAC CDB on Cluster B"
+    default: "dgpdb2"
+    required: false
+
+  pdb_name:
+    type: string
+    title: "Initial PDB Name"
+    default: "mypdb"
+    required: false
+
+  post_cluster_wait_seconds:
+    type: number
+    title: "Wait after Clusters (seconds)"
+    default: 900
+    required: false
+
+  between_dbhomes_wait_seconds:
+    type: number
+    title: "Gap between DB Homes (seconds)"
+    default: 300
+    required: false
+
+  pre_database_wait_seconds:
+    type: number
+    title: "Pre-Database Wait (seconds)"
+    default: 120
+    required: false
