@@ -45,7 +45,7 @@ variables:
     type: string
     title: "Region"
     description: "OCI region"
-    default: "us-phoenix-1"
+    default: "uk-london-1"
     required: true
 
   compartment_ocid:
@@ -57,7 +57,8 @@ variables:
   availability_domain:
     type: string
     title: "Availability Domain"
-    description: "Use your tenancy Availability Domain, for example: AAef:PHX-AD-1"
+    description: "Use the full tenancy-specific Availability Domain name. The validated London example is OUGC:UK-LONDON-1-AD-1."
+    default: "OUGC:UK-LONDON-1-AD-1"
     required: true
 
   db_admin_password:
@@ -134,7 +135,8 @@ variables:
   db_version:
     type: string
     title: "Database Version"
-    default: "23.26.2.0.0"
+    description: "Database version for both DB Homes. Verify supported versions in your target region before applying."
+    default: "23.26.3.0.0"
     required: false
 
   dgpdb1_name:

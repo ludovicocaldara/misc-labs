@@ -22,9 +22,9 @@ provider "oci" {
 # -----------------
 
 variable "region" {
-  description = "OCI region (for example, us-phoenix-1)."
+  description = "OCI region (for example, uk-london-1)."
   type        = string
-  default     = "us-phoenix-1"
+  default     = "uk-london-1"
 }
 
 variable "compartment_ocid" {
@@ -33,8 +33,9 @@ variable "compartment_ocid" {
 }
 
 variable "availability_domain" {
-  description = "Availability Domain for ExaDB-XS resources (for example, PHX-AD-1)."
+  description = "Full tenancy-specific Availability Domain name for ExaDB-XS resources (for example, OUGC:UK-LONDON-1-AD-1)."
   type        = string
+  default     = "OUGC:UK-LONDON-1-AD-1"
 }
 
 variable "vcn_cidr" {
@@ -104,9 +105,9 @@ variable "vmfs_size_gb_per_node" {
 }
 
 variable "db_version" {
-  description = "Database version."
+  description = "Database version for both DB Homes."
   type        = string
-  default     = "23.26.2.0.0"
+  default     = "23.26.3.0.0"
 }
 
 variable "dgpdb1_name" {

@@ -30,9 +30,27 @@ The initial PDB in both CDBs is `mypdb` by default. Override `dgpdb1_name`,
 
 ## Required Inputs
 
-Provide `compartment_ocid`, `availability_domain`, and a compliant
-`db_admin_password`. An SSH public key is optional but is recommended for the
-manual RAC and DGPDB preparation that follows provisioning.
+Provide `compartment_ocid` and a compliant `db_admin_password`. The supplied
+Availability Domain default works for the validated tenancy only; replace it
+when deploying from another tenancy. An SSH public key is optional but is
+recommended for the manual RAC and DGPDB preparation that follows provisioning.
+
+## Validated London Defaults
+
+The defaults are aligned to the validated UK South ExaDB-XS lookup:
+
+| Input | Default / example value |
+| --- | --- |
+| `region` | `uk-london-1` |
+| `availability_domain` | `OUGC:UK-LONDON-1-AD-1` |
+| `gi_version` | `23.0.0.0` |
+| Discovered GI image version | `23.26.3.0.0` |
+| `db_version` | `23.26.3.0.0` |
+
+`grid_image_id` remains empty by default. Terraform discovers the image from
+the GI version and Availability Domain, so the image OCID is not pinned.
+Availability Domain names are tenancy-specific; replace the `OUGC:`-prefixed
+value when deploying from another tenancy.
 
 ## After Terraform Apply
 
