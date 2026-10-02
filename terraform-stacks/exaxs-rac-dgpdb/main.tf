@@ -211,7 +211,7 @@ data "oci_database_gi_version_minor_versions" "exadb_xs" {
 
   compartment_id                 = var.compartment_ocid
   availability_domain            = var.availability_domain
-  is_gi_version_for_provisioning = true
+  #is_gi_version_for_provisioning = true
   shape_family                   = "EXADB_XS"
   version                        = var.gi_version
 }

@@ -4,7 +4,7 @@
 
 This playbook describes how to convert an existing pluggable database (PDB) that is protected as part of a conventional Oracle Data Guard configuration into a PDB protected by Data Guard per Pluggable Database (DGPDB).
 
-The example was developed and validated in an Oracle AI Database 26ai Release 23.26.2.0.0 environment on Oeacle Exadata Database Service on Exascale Infrastructure (ExaDB-XS). The reference environment consists of two Oracle Grid Infrastructure clusters. Each cluster hosts:
+The example was developed and validated in an Oracle AI Database 26ai Release 23.26.2.0.0 environment on Oracle Exadata Database Service on Exascale Infrastructure (ExaDB-XS). The reference environment consists of two Oracle Grid Infrastructure clusters. Each cluster hosts:
 
 - One CDB that participates in the DGPDB configuration.
 - One member of the existing conventional Data Guard configuration.
