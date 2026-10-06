@@ -122,10 +122,16 @@ variable "dgpdb2_name" {
   default     = "dgpdb2"
 }
 
-variable "pdb_name" {
+variable "pdb_name1" {
   description = "Initial PDB name created in both CDBs."
   type        = string
-  default     = "mypdb"
+  default     = "pdb1"
+}
+
+variable "pdb_name2" {
+  description = "Initial PDB name created in both CDBs."
+  type        = string
+  default     = "pdb2"
 }
 
 variable "db_admin_password" {
@@ -484,7 +490,7 @@ resource "oci_database_database" "dgpdb1" {
 
   database {
     db_name        = var.dgpdb1_name
-    pdb_name       = var.pdb_name
+    pdb_name       = var.pdb_name1
     admin_password = var.db_admin_password
     character_set  = "AL32UTF8"
     ncharacter_set = "AL16UTF16"
@@ -510,7 +516,7 @@ resource "oci_database_database" "dgpdb2" {
 
   database {
     db_name        = var.dgpdb2_name
-    pdb_name       = var.pdb_name
+    pdb_name       = var.pdb_name2
     admin_password = var.db_admin_password
     character_set  = "AL32UTF8"
     ncharacter_set = "AL16UTF16"

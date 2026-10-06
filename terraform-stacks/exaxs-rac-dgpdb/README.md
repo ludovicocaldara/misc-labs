@@ -54,12 +54,11 @@ value when deploying from another tenancy.
 
 ## After Terraform Apply
 
-Use the DGPDB preparation steps in
-[`dataguard/demos/exaxs-dg-to-dgpdb/migrate-existing-pdb-to-dgpdb.md`](../../dataguard/demos/exaxs-dg-to-dgpdb/migrate-existing-pdb-to-dgpdb.md),
-starting with the preparation of the two DGPDB CDBs. Configure Broker, shared
-Broker files, Oracle Net connectivity, wallets, and `PREPARE DGPDB` manually.
-Those runtime settings deliberately remain outside Terraform so this stack is
-safe to use as a clean DGPDB starting point.
+After provisioning, follow the
+[`exaxs-rac-dgpdb` demo](../../dataguard/demos/exaxs-rac-dgpdb/README.md) to
+configure Broker, shared Broker files, Oracle Net connectivity, client wallets,
+and `PREPARE DGPDB`. Those runtime settings deliberately remain outside
+Terraform so this stack is a clean DGPDB starting point.
 
 ## Notes
 
