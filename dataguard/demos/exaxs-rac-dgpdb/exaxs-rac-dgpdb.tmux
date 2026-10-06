@@ -242,3 +242,273 @@ exit
 
 echo {{clu1.dgpdb.pdb_name}}
 echo {{clu2.dgpdb.pdb_name}}
+
+---# ======================================= CREATE THE DGPDB STANDBYS
+---# Cluster A starts with {{clu1.dgpdb.pdb_name}}; Cluster B starts with {{clu2.dgpdb.pdb_name}}.
+---# The corresponding target PDB name must not already exist in the target CDB.
+---# Copy TDE keys in both directions before adding either standby PDB.
+
+---# --------------------------------------- VERIFY SOURCE PDBS ARE OPEN
+--- tmux select-pane -t :.0
+sql /@{{clu1.dgpdb.dbun}} as sysdba
+select name, open_mode from v$pdbs where name in (upper('{{clu1.dgpdb.pdb_name}}'), upper('{{clu2.dgpdb.pdb_name}}'));
+select name, cause, type, message, status from pdb_plug_in_violations where type = 'ERROR' and status != 'RESOLVED';
+exit
+
+--- tmux select-pane -t :.2
+sql /@{{clu2.dgpdb.dbun}} as sysdba
+select name, open_mode from v$pdbs where name in (upper('{{clu1.dgpdb.pdb_name}}'), upper('{{clu2.dgpdb.pdb_name}}'));
+select name, cause, type, message, status from pdb_plug_in_violations where type = 'ERROR' and status != 'RESOLVED';
+exit
+
+---# --------------------------------------- EXPORT CLUSTER A ROOT AND PDB TDE KEYS
+---# Verify keystore_mode is UNITED. Record root/PDB key IDs and compare them with the peer after import.
+--- tmux select-pane -t :.0
+sid {{clu1.dgpdb.dbun}}
+sql / as sysdba
+show con_name
+select con_id, status, wallet_type, keystore_mode from v$encryption_wallet order by con_id;
+select con_id, key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys where con_id = 1 order by activation_time;
+ADMINISTER KEY MANAGEMENT EXPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  TO '/tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}";
+ALTER SESSION SET CONTAINER = {{clu1.dgpdb.pdb_name}};
+show con_name
+select con_id, key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys order by activation_time;
+ADMINISTER KEY MANAGEMENT EXPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  TO '/tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}";
+ALTER SESSION SET CONTAINER = CDB$ROOT;
+exit
+test -s /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 && ls -l /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12
+test -s /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12 && ls -l /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12
+chmod 644 /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12
+
+---# --------------------------------------- EXPORT CLUSTER B ROOT AND PDB TDE KEYS
+--- tmux select-pane -t :.2
+sid {{clu2.dgpdb.dbun}}
+sql / as sysdba
+show con_name
+select con_id, status, wallet_type, keystore_mode from v$encryption_wallet order by con_id;
+select con_id, key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys where con_id = 1 order by activation_time;
+ADMINISTER KEY MANAGEMENT EXPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  TO '/tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}";
+ALTER SESSION SET CONTAINER = {{clu2.dgpdb.pdb_name}};
+show con_name
+select con_id, key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys order by activation_time;
+ADMINISTER KEY MANAGEMENT EXPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  TO '/tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}";
+ALTER SESSION SET CONTAINER = CDB$ROOT;
+exit
+test -s /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 && ls -l /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12
+test -s /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12 && ls -l /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12
+chmod 644 /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12
+
+---# --------------------------------------- COPY ENCRYPTED ROOT AND PDB KEY EXPORTS
+--- tmux select-pane -t :.1
+exit
+exit
+scp {{public_key}} opc@{{clu1.host1.public_ip}}:/tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp
+scp {{public_key}} opc@{{clu1.host1.public_ip}}:/tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12 /tmp
+scp {{public_key}} opc@{{clu2.host1.public_ip}}:/tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp
+scp {{public_key}} opc@{{clu2.host1.public_ip}}:/tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12 /tmp
+scp {{public_key}} /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12 opc@{{clu2.host1.public_ip}}:/tmp
+scp {{public_key}} /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12 opc@{{clu1.host1.public_ip}}:/tmp
+ssh {{public_key}} opc@{{clu2.host1.public_ip}} sudo chown oracle:dba /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12 && echo OK
+ssh {{public_key}} opc@{{clu1.host1.public_ip}} sudo chown oracle:dba /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12 && echo OK
+rm /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12
+rm /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12
+ssh {{public_key}} opc@{{clu1.host2.public_ip}}
+sudo su - oracle
+
+---# --------------------------------------- IMPORT CLUSTER B ROOT AND PDB KEYS INTO A
+---# Import both scopes into the CDB's united keystore before creating the standby PDB.
+--- tmux select-pane -t :.0
+sid {{clu1.dgpdb.dbun}}
+sql / as sysdba
+show con_name
+ADMINISTER KEY MANAGEMENT IMPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  FROM '/tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
+ADMINISTER KEY MANAGEMENT IMPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  FROM '/tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
+select con_id, status, wallet_type, keystore_mode from v$encryption_wallet order by con_id;
+select con_id, key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys order by creator_dbname, creator_pdbname, activation_time;
+exit
+
+---# --------------------------------------- IMPORT CLUSTER A ROOT AND PDB KEYS INTO B
+--- tmux select-pane -t :.2
+sid {{clu2.dgpdb.dbun}}
+sql / as sysdba
+show con_name
+ADMINISTER KEY MANAGEMENT IMPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  FROM '/tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
+ADMINISTER KEY MANAGEMENT IMPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  FROM '/tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
+select con_id, status, wallet_type, keystore_mode from v$encryption_wallet order by con_id;
+select con_id, key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys order by creator_dbname, creator_pdbname, activation_time;
+exit
+
+---# --------------------------------------- ADD BOTH DGPDB TARGET PDBS
+---# The default db_version is 23.26.3; Broker automatically instantiates target PDB files at 23.26.2+.
+--- tmux select-pane -t :.0
+dgmgrl /@{{clu2.dgpdb.dbun}}
+ADD PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}} SOURCE IS {{clu1.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}}
+  PDBFileNameConvert IS "'/{{clu1.dgpdb.dbun}}/','/{{clu2.dgpdb.dbun}}/'"
+  'keystore identified by "{{input:password}}"';
+connect /@{{clu1.dgpdb.dbun}}
+ADD PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}} SOURCE IS {{clu2.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}}
+  PDBFileNameConvert IS "'/{{clu2.dgpdb.dbun}}/','/{{clu1.dgpdb.dbun}}/'"
+  'keystore identified by "{{input:password}}"';
+SHOW CONFIGURATION;
+SHOW PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+exit
+
+---# --------------------------------------- IMPORT PDB KEYS IN THE STANDBY PDB CONTEXTS
+---# Oracle requires a second import inside each PDB to associate its keys with that PDB.
+--- tmux select-pane -t :.0
+sql /@{{clu2.dgpdb.dbun}} as sysdba
+alter session set container = {{clu1.dgpdb.pdb_name}};
+show con_name
+ADMINISTER KEY MANAGEMENT IMPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  FROM '/tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
+select key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys order by activation_time;
+alter session set container = CDB$ROOT;
+exit
+--- tmux select-pane -t :.2
+sql /@{{clu1.dgpdb.dbun}} as sysdba
+alter session set container = {{clu2.dgpdb.pdb_name}};
+show con_name
+ADMINISTER KEY MANAGEMENT IMPORT ENCRYPTION KEYS WITH SECRET "{{input:password}}"
+  FROM '/tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12'
+  FORCE KEYSTORE IDENTIFIED BY "{{input:password}}" WITH BACKUP;
+select key_id, creator_dbname, creator_pdbname, key_use, activation_time from v$encryption_keys order by activation_time;
+alter session set container = CDB$ROOT;
+exit
+
+---# --------------------------------------- REMOVE REMOTE KEY EXPORT FILES
+--- tmux select-pane -t :.0
+rm -f /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12
+--- tmux select-pane -t :.2
+rm -f /tmp/{{clu1.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu1.dgpdb.dbun}}_{{clu1.dgpdb.pdb_name}}_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_root_tdekeys.p12 /tmp/{{clu2.dgpdb.dbun}}_{{clu2.dgpdb.pdb_name}}_tdekeys.p12
+
+---# --------------------------------------- ENABLE REDO APPLY FOR BOTH STANDBY PDBS
+---# Compare PDB key IDs with export output; also confirm imported root IDs in the CDB-root queries above.
+--- tmux select-pane -t :.0
+dgmgrl /@{{clu1.dgpdb.dbun}}
+EDIT PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}} SET STATE='APPLY-ON';
+EDIT PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}} SET STATE='APPLY-ON';
+SHOW CONFIGURATION;
+exit
+
+---# --------------------------------------- GENERATE REDO AND VERIFY APPLY
+--- tmux select-pane -t :.0
+sid {{clu1.dgpdb.dbun}}
+sql / as sysdba
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+exit
+--- tmux select-pane -t :.2
+sid {{clu2.dgpdb.dbun}}
+sql / as sysdba
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+exit
+--- tmux select-pane -t :.0
+dgmgrl /@{{clu1.dgpdb.dbun}}
+SHOW PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+VALIDATE PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+VALIDATE PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+exit
+
+---# --------------------------------------- VERIFY PLUG-IN ERRORS AND RAC OPEN MODES
+--- tmux select-pane -t :.0
+sql /@{{clu1.dgpdb.dbun}} as sysdba
+select inst_id, name, open_mode from gv$pdbs where name in (upper('{{clu1.dgpdb.pdb_name}}'), upper('{{clu2.dgpdb.pdb_name}}')) order by name, inst_id;
+select name, cause, type, message, status from pdb_plug_in_violations where type = 'ERROR' and status != 'RESOLVED';
+connect /@{{clu2.dgpdb.dbun}} as sysdba
+select inst_id, name, open_mode from gv$pdbs where name in (upper('{{clu1.dgpdb.pdb_name}}'), upper('{{clu2.dgpdb.pdb_name}}')) order by name, inst_id;
+select name, cause, type, message, status from pdb_plug_in_violations where type = 'ERROR' and status != 'RESOLVED';
+exit
+
+---# --------------------------------------- SWITCH OVER CLUSTER B PDB TO A
+---# Proceed only after VALIDATE reports Ready for Switchover and target apply is running.
+--- tmux select-pane -t :.0
+dg_ /@{{clu1.dgpdb.dbun}}
+SET TIME ON
+VALIDATE PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+SWITCHOVER TO PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu2.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+
+---# --------------------------------------- SWITCH OVER CLUSTER A PDB TO B
+VALIDATE PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SWITCHOVER TO PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu2.dgpdb.dbun}};
+SHOW PLUGGABLE DATABASE {{clu1.dgpdb.pdb_name}} AT {{clu1.dgpdb.dbun}};
+exit
+
+---# --------------------------------------- VERIFY THE FINAL PDB ROLES ON RAC
+--- tmux select-pane -t :.0
+sql /@{{clu1.dgpdb.dbun}} as sysdba
+select inst_id, name, open_mode from gv$pdbs where name in (upper('{{clu1.dgpdb.pdb_name}}'), upper('{{clu2.dgpdb.pdb_name}}')) order by name, inst_id;
+select name, cause, type, message, status from pdb_plug_in_violations where type = 'ERROR' and status != 'RESOLVED';
+connect /@{{clu2.dgpdb.dbun}} as sysdba
+select inst_id, name, open_mode from gv$pdbs where name in (upper('{{clu1.dgpdb.pdb_name}}'), upper('{{clu2.dgpdb.pdb_name}}')) order by name, inst_id;
+select name, cause, type, message, status from pdb_plug_in_violations where type = 'ERROR' and status != 'RESOLVED';
+exit
+
+---# --------------------------------------- CREATE ROLE-BASED PDB SERVICES
+---# After the switchovers above, PDB1 is primary on Cluster B and PDB2 is primary on Cluster A.
+---# Register both role services for each PDB on both CDBs so they are available after a later switchover.
+---# The stack uses the default SID prefix (DB_NAME), so the two RAC instances are DB_NAME1 and DB_NAME2.
+--- tmux select-pane -t :.0
+sid {{clu1.dgpdb.dbun}}
+srvctl add service -db {{clu1.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_rw -pdb {{clu1.dgpdb.pdb_name}} -role PRIMARY -policy AUTOMATIC -preferred {{clu1.dgpdb.dbname}}1,{{clu1.dgpdb.dbname}}2
+srvctl add service -db {{clu1.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro -pdb {{clu1.dgpdb.pdb_name}} -role PHYSICAL_STANDBY -policy AUTOMATIC -preferred {{clu1.dgpdb.dbname}}1 -available {{clu1.dgpdb.dbname}}2
+srvctl add service -db {{clu1.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_rw -pdb {{clu2.dgpdb.pdb_name}} -role PRIMARY -policy AUTOMATIC -preferred {{clu1.dgpdb.dbname}}1,{{clu1.dgpdb.dbname}}2
+srvctl add service -db {{clu1.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro -pdb {{clu2.dgpdb.pdb_name}} -role PHYSICAL_STANDBY -policy AUTOMATIC -preferred {{clu1.dgpdb.dbname}}1 -available {{clu1.dgpdb.dbname}}2
+--- tmux select-pane -t :.2
+sid {{clu2.dgpdb.dbun}}
+srvctl add service -db {{clu2.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_rw -pdb {{clu1.dgpdb.pdb_name}} -role PRIMARY -policy AUTOMATIC -preferred {{clu2.dgpdb.dbname}}1,{{clu2.dgpdb.dbname}}2
+srvctl add service -db {{clu2.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro -pdb {{clu1.dgpdb.pdb_name}} -role PHYSICAL_STANDBY -policy AUTOMATIC -preferred {{clu2.dgpdb.dbname}}1,{{clu2.dgpdb.dbname}}2
+srvctl add service -db {{clu2.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_rw -pdb {{clu2.dgpdb.pdb_name}} -role PRIMARY -policy AUTOMATIC -preferred {{clu2.dgpdb.dbname}}1,{{clu2.dgpdb.dbname}}2
+srvctl add service -db {{clu2.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro -pdb {{clu2.dgpdb.pdb_name}} -role PHYSICAL_STANDBY -policy AUTOMATIC -preferred {{clu2.dgpdb.dbname}}1,{{clu2.dgpdb.dbname}}2
+
+---# --------------------------------------- START SERVICES FOR THE CURRENT PDB ROLES
+---# Cluster A: PDB1 is standby and PDB2 is primary.
+--- tmux select-pane -t :.0
+srvctl start service -db {{clu1.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_rw
+---# start and stop the RO on primary to create it
+srvctl start service -db {{clu1.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro
+srvctl stop service -db {{clu1.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro
+srvctl start service -db {{clu1.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro
+srvctl stop service -db {{clu1.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro
+
+---# Cluster B: PDB1 is primary and PDB2 is standby.
+--- tmux select-pane -t :.2
+srvctl start service -db {{clu2.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_rw
+---# start and stop the RO on primary to create it
+srvctl start service -db {{clu2.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro
+srvctl stop service -db {{clu2.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro
+srvctl start service -db {{clu2.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro
+srvctl stop service -db {{clu2.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro
+
+--- tmux select-pane -t :.0
+srvctl start service -db {{clu1.dgpdb.dbun}} -service {{clu1.dgpdb.pdb_name}}_ro
+srvctl status service -db {{clu1.dgpdb.dbun}}
+--- tmux select-pane -t :.2
+srvctl start service -db {{clu2.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro
+srvctl status service -db {{clu2.dgpdb.dbun}}
