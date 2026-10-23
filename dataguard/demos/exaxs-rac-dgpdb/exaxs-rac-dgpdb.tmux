@@ -512,3 +512,12 @@ srvctl status service -db {{clu1.dgpdb.dbun}}
 --- tmux select-pane -t :.2
 srvctl start service -db {{clu2.dgpdb.dbun}} -service {{clu2.dgpdb.pdb_name}}_ro
 srvctl status service -db {{clu2.dgpdb.dbun}}
+
+--- tmux select-pane -t :.0
+--- tmux capture-pane -pS - > /tmp/tmux-0.txt
+--- tmux select-pane -t :.1
+--- tmux capture-pane -pS - > /tmp/tmux-1.txt
+--- tmux select-pane -t :.2
+--- tmux capture-pane -pS - > /tmp/tmux-2.txt
+--- tmux select-pane -t :.3
+--- tmux capture-pane -pS - > /tmp/tmux-3.txt
